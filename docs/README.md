@@ -1,5 +1,6 @@
-## 16 Aug
-Brief outline of project:
+## 16 Aug 2018
+**Brief outline of project:**
+
 Investigate different graph CNN approaches as recommender systems. The 3 methods to be compared are as follows.
 1. [Geometric Matrix Completion with Recurrent Multi-Graph Neural Networks (Monti, 2017)](https://arxiv.org/abs/1704.06803)
 1. [Graph Convolutional Matrix Completion (Berg, 2017)](https://arxiv.org/abs/1706.02263)
