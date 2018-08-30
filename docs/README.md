@@ -11,6 +11,7 @@
 * How to apply residual gated graph convnets to recommender systems? Key question. Central task of project.
 * What does fixed/variable length graph mean?
 * Does [Geometric Matrix Completion with Recurrent Multi-Graph Neural Networks (Monti, 2017)](https://arxiv.org/abs/1704.06803) work only with fixed length graphs? [Residual Gated Graph ConvNets (Bresson, 2017)](https://arxiv.org/abs/1711.07553) is applicable for graphs with variable length.
+* What does the test set look like?
 
 
 ## 16 Aug 2018
