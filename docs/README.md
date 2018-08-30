@@ -8,7 +8,7 @@
 * Multigraphs: Graphs that are permitted to have multiple/parallel edges; where two vertices can be connected by more than one edge. However multi-graph in [Geometric Matrix Completion with Recurrent Multi-Graph Neural Networks (Monti, 2017)](https://arxiv.org/abs/1704.06803) probably refers to how spectral convolution is applied to row and column graphs instead of just a single graph.
 
 **Some questions**
-* How to apply residual gated graph convnets to recommender systems?
+* How to apply residual gated graph convnets to recommender systems? Key question. Central task of project.
 * What does fixed/variable length graph mean?
 * Does [Geometric Matrix Completion with Recurrent Multi-Graph Neural Networks (Monti, 2017)](https://arxiv.org/abs/1704.06803) work only with fixed length graphs? [Residual Gated Graph ConvNets (Bresson, 2017)](https://arxiv.org/abs/1711.07553) is applicable for graphs with variable length.
 
