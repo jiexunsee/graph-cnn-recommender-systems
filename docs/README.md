@@ -1,6 +1,8 @@
 ## 3 Sep 2018
 **Progress**
 * Read the three papers
+* Project plan completed
+* Code for three methods briefly explored
 
 **Some insights**
 * Multi-graphs: Graphs that are permitted to have multiple/parallel edges; where two vertices can be connected by more than one edge.
