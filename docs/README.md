@@ -2,7 +2,6 @@
 **Progress**
 * Read the four papers listed in 16 Aug update
 * Project plan completed
-* Code for three methods briefly explored
 
 **Some insights**
 * Multigraphs: Graphs that are permitted to have multiple/parallel edges; where two vertices can be connected by more than one edge. However multi-graph in [Geometric Matrix Completion with Recurrent Multi-Graph Neural Networks (Monti, 2017)](https://arxiv.org/abs/1704.06803) probably refers to how spectral convolution is applied to row and column graphs instead of just a single graph.
