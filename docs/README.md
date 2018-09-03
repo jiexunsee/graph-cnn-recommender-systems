@@ -1,3 +1,9 @@
+## 17 Sep 2018
+**Progress (to do):**
+* Ran code for MGCNN and GCMC on local machine
+* Read and understood code
+* Preliminary modifying of code to replace message passing encoder step with RGGCN
+
 ## 3 Sep 2018
 **Progress:**
 * Read the four papers listed in 16 Aug update
