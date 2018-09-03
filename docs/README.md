@@ -7,8 +7,14 @@
 **Some insights**
 * Multigraphs: Graphs that are permitted to have multiple/parallel edges; where two vertices can be connected by more than one edge. However multi-graph in [Geometric Matrix Completion with Recurrent Multi-Graph Neural Networks (Monti, 2017)](https://arxiv.org/abs/1704.06803) probably refers to how spectral convolution is applied to row and column graphs instead of just a single graph.
 
+**Thoughts on applying residual gated graph convnets to recommender systems**
+* Building on encoder-decoder framework in GCMC:
+  * Use RGGCN layer instead of message passing method in the encoder network
+  * Use RGGCN layer on user and item graphs to produce additional feature information for 
+* Building on framework in separable MGCNN:
+  * Use RGCNN layer to produce **W** and **H** ?
+
 **Some questions**
-* How to apply residual gated graph convnets to recommender systems? This is the central task of the project.
 * Sanity check: what does fixed/variable length graph mean?
 * Can MGCNN and GCMC work for variable length graphs? RGGCN is applicable for graphs with variable length.
 * What does the test set look like for a recommender system matrix completion problem?
