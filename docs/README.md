@@ -8,10 +8,10 @@
 
 **Thoughts on applying residual gated graph convnets to recommender systems:**
 * Building on encoder-decoder framework in GCMC:
-  * Use RGGCN layer instead of message passing method in the encoder network
-  * Use RGGCN layer on user and item graphs to produce additional feature information for 
-* Building on framework in separable MGCNN:
-  * Use RGCNN layer to produce **W** and **H** ?
+  * Use RGGCN layer instead of message passing method in the encoder network to produce node embeddings
+  * Use RGGCN layer on user and item graphs to produce additional feature information for encoder-decoder network
+* Building on framework in MGCNN:
+  * Use RGCNN layer to produce **W** and **H** as in a separable MGCNN?
 
 **Some questions:**
 * Sanity check: what does fixed/variable length graph mean? That number of vertices in a graph can change over time?
