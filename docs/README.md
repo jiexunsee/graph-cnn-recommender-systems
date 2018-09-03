@@ -26,7 +26,7 @@
 Investigate different graph CNN approaches as recommender systems. The 3 methods to be compared are as follows.
 1. [Geometric Matrix Completion with Recurrent Multi-Graph Neural Networks (Monti, 2017)](https://arxiv.org/abs/1704.06803) (MGCNN)
 1. [Graph Convolutional Matrix Completion (Berg, 2017)](https://arxiv.org/abs/1706.02263) (GCMC)
-1. [Residual Gated Graph ConvNets (Bresson, 2017)](https://arxiv.org/abs/1711.07553) (RGGCN)
+1. [Residual Gated Graph ConvNets (Bresson, 2018)](https://arxiv.org/abs/1711.07553) (RGGCN)
 
 [Convolutional Neural Networks on Graphs with Fast Localized Spectral Filtering (Defferrard, 2017)](https://arxiv.org/pdf/1606.09375.pdf) is an earlier paper that provides some theoretical background to the matrix completion method used in MGCNN by Monti et. al., 2017. 
 
