@@ -15,7 +15,7 @@
 
 **Some questions**
 * Sanity check: what does fixed/variable length graph mean? That number of vertices in a graph can change over time?
-* Can MGCNN and GCMC work for variable length graphs? RGGCN is applicable for graphs with variable length.
+* RGGCN is applicable for graphs with variable length. GCMC looks like it can handle variable length? But not MGCNN?
 * What does the test set look like for a recommender system matrix completion problem?
 
 
