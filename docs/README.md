@@ -14,7 +14,7 @@
   * Use RGCNN layer to produce **W** and **H** ?
 
 **Some questions**
-* Sanity check: what does fixed/variable length graph mean?
+* Sanity check: what does fixed/variable length graph mean? That number of vertices in a graph can change over time?
 * Can MGCNN and GCMC work for variable length graphs? RGGCN is applicable for graphs with variable length.
 * What does the test set look like for a recommender system matrix completion problem?
 
