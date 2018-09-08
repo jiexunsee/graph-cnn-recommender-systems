@@ -3,6 +3,7 @@
 * Read and understood code
   * [MGCNN code](https://github.com/fmonti/mgcnn)
   * [GCMC code](https://github.com/riannevdberg/gc-mc)
+  * [RGGCN code](https://github.com/xbresson/spatial_graph_convnets)
 * Ran code for MGCNN and GCMC on local machine
 * Preliminary modifying of code to replace message passing encoder step with RGGCN
 
