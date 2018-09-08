@@ -1,7 +1,9 @@
 ## 17 Sep 2018
 **Progress (to do):**
-* Ran code for MGCNN and GCMC on local machine
 * Read and understood code
+  * [MGCNN code](https://github.com/fmonti/mgcnn)
+  * [GCMC code](https://github.com/riannevdberg/gc-mc)
+* Ran code for MGCNN and GCMC on local machine
 * Preliminary modifying of code to replace message passing encoder step with RGGCN
 
 ## 3 Sep 2018
