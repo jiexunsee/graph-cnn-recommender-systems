@@ -11,6 +11,7 @@
 * MGCNN: why is parameters 1 for user+item graphs (Table 1) and m for user graph only (Table 2)?
 * MGCNN code: how to tell if model is using user or user+item graphs?
 * MGCNN: any reason why RMSE is higher when user+item graphs are used compared to when user graph is used for Flixster dataset?
+* MGCNN code: movielens model runs out of CUDA memory at about 1120 iterations
 
 ## 3 Sep 2018
 **Progress:**
