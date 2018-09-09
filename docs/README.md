@@ -7,6 +7,11 @@
 * Ran code for MGCNN and GCMC on local machine
 * Preliminary modifying of code to replace message passing encoder step with RGGCN
 
+**Questions:**
+* MGCNN: why is parameters 1 for user+item graphs (Table 1) and m for user graph only (Table 2)?
+* MGCNN code: how to tell if model is using user or user+item graphs?
+* MGCNN: any reason why RMSE is higher when user+item graphs are used compared to when user graph is used for Flixster dataset?
+
 ## 3 Sep 2018
 **Progress:**
 * Read the four papers listed in 16 Aug update
