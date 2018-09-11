@@ -15,6 +15,9 @@
 * MGCNN code: movielens model runs out of CUDA memory at about 1120 iterations
 * GCMC code: what's `polyak RMSE`?
 
+**Observations:**
+Both MGCNN and GCMC were trained on my personal computer with its GTX 1050 GPU. GCMC trains much faster than MGCNN. For example, GCMC takes about a minute to train on the Flixster dataset while MGCNN takes over an hour.
+
 ## 3 Sep 2018
 **Progress:**
 * Read the four papers listed in 16 Aug update
