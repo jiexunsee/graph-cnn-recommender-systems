@@ -1,11 +1,12 @@
 ## 17 Sep 2018
-**Progress (to do):**
-* Read and understood code
+**Progress:**
+* Read and understood code (TO DO)
   * [MGCNN code](https://github.com/fmonti/mgcnn)
   * [GCMC code](https://github.com/riannevdberg/gc-mc)
   * [RGGCN code](https://github.com/xbresson/spatial_graph_convnets)
 * Ran code for MGCNN and GCMC on local machine
-* Preliminary modifying of code to replace message passing encoder step with RGGCN
+  * Reproduction results here: [google doc link](https://docs.google.com/document/d/1nU2W1fV3GRLtKmrvvLsA_G1Miu7KFXu7P2NjN1BoqXg/edit?usp=sharing)
+* Preliminary modifying of code to replace message passing encoder step with RGGCN (TO DO)
 
 **Questions:**
 * MGCNN: why is parameters 1 for user+item graphs (Table 1) and m for user graph only (Table 2)?
@@ -38,7 +39,7 @@
 **Brief outline of project:**
 
 Investigate different graph CNN approaches as recommender systems. The 3 methods to be compared are as follows.
-1. [Geometric Matrix Completion with Recurrent Multi-Graph Neural Networks (Monti, 2017)](https://arxiv.org/abs/1704.06803) (MGCNN)
+1. [Geometric Matrix Completion with Recurrent Multi-Graph Neural Networks (Monti, 2017)](https://arxiv.org/abs/1704.06803) (Abbreviated as MGCNN in this project to avoid confusion with RGGCN)
 1. [Graph Convolutional Matrix Completion (Berg, 2017)](https://arxiv.org/abs/1706.02263) (GCMC)
 1. [Residual Gated Graph ConvNets (Bresson, 2018)](https://arxiv.org/abs/1711.07553) (RGGCN)
 
