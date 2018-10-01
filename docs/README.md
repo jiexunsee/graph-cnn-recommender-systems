@@ -1,3 +1,9 @@
+## 15 Oct 2018
+**Progress:**
+* Set up Google Cloud Platform GPU instance, installing CUDA 9.0 and CUDNN so that TensorFlow 1.10 runs with GPU acceleration.
+* Translated PyTorch code from spatial graph convnets repo to TensorFlow code so that it runs within the framework by Berg et al. in GCMC
+* Initial results [here](https://drive.google.com/drive/u/1/folders/1iid714S1XqTvL129w2zl_wYioqdR7sno)
+
 ## 17 Sep 2018
 **Progress:**
 * Read and understood code (TO DO)
