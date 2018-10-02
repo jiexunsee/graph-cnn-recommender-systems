@@ -231,7 +231,7 @@ support_t = sp.hstack(support_t, format='csr')
 # NOTE: support is sparse matrix so the shape may not be as large as expected (?)
 # When is num_support ever not == num_rating_classes?
 
-if ACCUM == 'stack':
+if ACCUM == 'stack' or ACCUM == 'stackRGGCN':
     div = HIDDEN[0] // num_support
     if HIDDEN[0] % num_support != 0:
         print("""\nWARNING: HIDDEN[0] (=%d) of stack layer is adjusted to %d such that
@@ -390,16 +390,11 @@ num_features = u_features[2][1]
 u_features_nonzero = u_features[1].shape[0]
 v_features_nonzero = v_features[1].shape[0]
 
-# test_E_start = sparse_to_tuple(test_E_start)
-# test_E_end = sparse_to_tuple(test_E_end)
-
-# val_E_start = sparse_to_tuple(val_E_start)
-# val_E_end = sparse_to_tuple(val_E_end)
-
-# train_E_start = sparse_to_tuple(train_E_start)
-# train_E_end = sparse_to_tuple(train_E_end)
+# setting E_start to be the same for train, val, and test. E_start already only contains train edges (from preprocessing script)
 train_E_start = []
 train_E_end = []
+print('LENGTH OF E_START: {}'.format(len(E_start)))
+print('NUM_SUPPORT: {}'.format(num_support))
 for i in range(num_support):
     train_E_start.append(sparse_to_tuple(E_start[i]))
     train_E_end.append(sparse_to_tuple(E_end[i]))

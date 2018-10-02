@@ -342,10 +342,12 @@ def get_edges_matrices(adj, separate=True):
     adj = new_adj
     if separate:
         unique_ratings = np.unique(adj)
+        print(unique_ratings)
+        print(len(unique_ratings))
         nb_vertices = adj.shape[0]
         E_start = []
         E_end = []
-        for r in unique_ratings:
+        for r in range(int(max(unique_ratings)) + 1): # to handle yahoo dataset where not all rating types are present in the training set
             if r == 0:
                 continue
             r_adj = np.where(adj == r, adj, np.zeros_like(adj))
@@ -360,12 +362,12 @@ def get_edges_matrices(adj, separate=True):
             E_start.append(edge_to_starting_vertex)
             E_end.append(edge_to_ending_vertex)
 
-        print('E_START!!')
-        for i in range(len(E_start)):
-            print(E_start[i].shape)
-        print('E_END!!')
-        for i in range(len(E_end)):
-            print(E_end[i].shape)
+        # print('E_START!!')
+        # for i in range(len(E_start)):
+        #     print(E_start[i].shape)
+        # print('E_END!!')
+        # for i in range(len(E_end)):
+        #     print(E_end[i].shape)
         return E_start, E_end
 
     else:
