@@ -252,12 +252,12 @@ class StackRGGCN(Layer):
             self.bv1 = self.get_bias_variable(output_dim, num_support, 'bv1')
 
             # conv2 (with split weights)
-            self.Ui2 = self.get_weight_variable(int(output_dim/num_support), output_dim, num_support, 'Ui2')
-            self.Uj2 = self.get_weight_variable(int(output_dim/num_support), output_dim, num_support, 'Uj2')
-            self.Vi2 = self.get_weight_variable(int(output_dim/num_support), output_dim, num_support, 'Vi2')
-            self.Vj2 = self.get_weight_variable(int(output_dim/num_support), output_dim, num_support, 'Vj2')
-            self.bu2 = self.get_bias_variable(int(output_dim/num_support), num_support, 'bu2')
-            self.bv2 = self.get_bias_variable(int(output_dim/num_support), num_support, 'bv2')
+            self.Ui2 = self.get_weight_variable(output_dim, output_dim, num_support, 'Ui2')
+            self.Uj2 = self.get_weight_variable(output_dim, output_dim, num_support, 'Uj2')
+            self.Vi2 = self.get_weight_variable(output_dim, output_dim, num_support, 'Vi2')
+            self.Vj2 = self.get_weight_variable(output_dim, output_dim, num_support, 'Vj2')
+            self.bu2 = self.get_bias_variable(output_dim, num_support, 'bu2')
+            self.bv2 = self.get_bias_variable(output_dim, num_support, 'bv2')
             
             # resnet
             self.R = weight_variable_random_uniform(input_dim, output_dim, name='R')
@@ -274,8 +274,6 @@ class StackRGGCN(Layer):
         for i in range(num_support):
             self.E_start.append(E_start_list[i])
             self.E_end.append(E_end_list[i])
-
-        print(self.E_start[0])
 
         if self.logging:
             self._log_vars()
@@ -314,7 +312,12 @@ class StackRGGCN(Layer):
             x = tf.nn.bias_add(x, self.bu1[i])
             x = tf.layers.batch_normalization(x)
             x = tf.nn.relu(x)
+            outputs.append(x)
+        output = tf.concat(axis=1, values=outputs)
 
+        outputs = []
+        for i in range(len(self.E_start)):
+            x = output
             # conv2
             Vix = dot(x, self.Vi2[i])
             Vjx = dot(x, self.Vj2[i])
