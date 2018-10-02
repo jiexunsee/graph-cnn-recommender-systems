@@ -5,7 +5,7 @@
 * Initial results [here](https://drive.google.com/drive/u/1/folders/1iid714S1XqTvL129w2zl_wYioqdR7sno)
 
 **Questions:**
-* Probable typo in [spatial graph convnets code](https://github.com/xbresson/spatial_graph_convnets/blob/master/01_residual_gated_graph_convnets_subgraph_matching.ipynb)
+* Possible typo in [spatial graph convnets code](https://github.com/xbresson/spatial_graph_convnets/blob/master/01_residual_gated_graph_convnets_subgraph_matching.ipynb)
   * In line `x = Uix + torch.mm(E_end.t(), x1*x2) + self.bu1`, should it be `Ujx` instead of `Uix`?
 
 ## 17 Sep 2018
