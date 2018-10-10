@@ -193,10 +193,10 @@ class RecommenderGAE(Model):
                                         share_user_item_weights=True))
 
         elif self.accum == 'sumRGGCN':
-            self.layers.append(SumRGGCN(input_dim=self.input_dim,
+            self.layers.append(OrdinalRGGCN(input_dim=self.input_dim,
                                         output_dim=self.hidden[0],
-                                        E_start=self.E_start,
-                                        E_end=self.E_end,
+                                        E_start_list=self.E_start_list,
+                                        E_end_list=self.E_end_list,
                                         num_support=self.num_support,
                                         u_features_nonzero=self.u_features_nonzero,
                                         v_features_nonzero=self.v_features_nonzero,

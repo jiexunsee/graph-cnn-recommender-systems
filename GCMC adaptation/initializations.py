@@ -69,7 +69,7 @@ def orthogonal(shape, scale=1.1, name=None):
 
 
 def bias_variable_const(shape, val, name=""):
-    """Create a bias variable initialized as zero."""
+    """Create a bias variable initialized as const."""
     value = tf.to_float(val)
     initial = tf.fill(shape, value, name=name)
     return tf.Variable(initial, name=name)

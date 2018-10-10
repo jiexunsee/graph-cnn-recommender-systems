@@ -334,10 +334,7 @@ for i in range(num_support):
     placeholders['E_start_list'].append(tf.sparse_placeholder(tf.float32, shape=(None, None)))
     placeholders['E_end_list'].append(tf.sparse_placeholder(tf.float32, shape=(None, None)))
 
-train_E_start = test_E_start = val_E_start = E_start
-train_E_end = test_E_end = val_E_end = E_end
-print(len(train_E_end))
-print(train_E_end[0].toarray().shape)
+print('shape of E_end for first rating type: {}'.format(E_end[0].toarray().shape))
 
 ##################################################################################################################
 

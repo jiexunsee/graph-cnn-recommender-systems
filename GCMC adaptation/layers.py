@@ -147,81 +147,129 @@ class Dense(Layer):
             return outputs_u, outputs_v
 
 """ NEW LAYER """
-class SumRGGCN(Layer):
+class OrdinalRGGCN(Layer):
     """Residual gated graph convolutional layer (Bresson). adapted from stackGC layer """
-    def __init__(self, input_dim, output_dim, E_start, E_end, num_support, u_features_nonzero=None,
+    def __init__(self, input_dim, output_dim, E_start_list, E_end_list, num_support, u_features_nonzero=None,
                  v_features_nonzero=None, sparse_inputs=False, dropout=0.,
                  act=tf.nn.relu, share_user_item_weights=True, **kwargs):
-        super(SumRGGCN, self).__init__(**kwargs)
+        super(OrdinalRGGCN, self).__init__(**kwargs)
 
         assert output_dim % num_support == 0, 'output_dim must be multiple of num_support for stackGC layer'
+        assert len(E_start_list) == num_support, 'length of E_start not equal to num_support'
+
+        self.sparse_inputs = sparse_inputs
 
         with tf.variable_scope(self.name + '_vars'):
-            # conv1
-            self.Ui1 = weight_variable_random_uniform(input_dim, output_dim, name='Ui1')
-            self.Uj1 = weight_variable_random_uniform(input_dim, output_dim, name='Uj1')
-            self.Vi1 = weight_variable_random_uniform(input_dim, output_dim, name='Vi1')
-            self.Vj1 = weight_variable_random_uniform(input_dim, output_dim, name='Vi1')
-            self.bu1 = bias_variable_zero(output_dim, name='bu1')
-            self.bv1 = bias_variable_zero(output_dim, name='bv1')
+            self.Ui1 = tf.stack([weight_variable_random_uniform(input_dim, output_dim, name='Ui1_%d' % i) for i in range(num_support)], axis=0)
+            self.Uj1 = tf.stack([weight_variable_random_uniform(input_dim, output_dim, name='Uj1_%d' % i) for i in range(num_support)], axis=0)
+            self.Vi1 = tf.stack([weight_variable_random_uniform(input_dim, output_dim, name='Vi1_%d' % i) for i in range(num_support)], axis=0)
+            self.Vj1 = tf.stack([weight_variable_random_uniform(input_dim, output_dim, name='Vj1_%d' % i) for i in range(num_support)], axis=0)
+            self.bu1 = bias_variable_zero([output_dim], name="bu1")
+            self.bv1 = bias_variable_zero([output_dim], name="bv1")
 
-            # conv2
-            self.Ui2 = weight_variable_random_uniform(output_dim, output_dim, name='Ui2')
-            self.Uj2 = weight_variable_random_uniform(output_dim, output_dim, name='Uj2')
-            self.Vi2 = weight_variable_random_uniform(output_dim, output_dim, name='Vi2')
-            self.Vj2 = weight_variable_random_uniform(output_dim, output_dim, name='Vi2')
-            self.bu2 = bias_variable_zero(output_dim, name='bu2')
-            self.bv2 = bias_variable_zero(output_dim, name='bv2')
+            self.Ui2 = tf.stack([weight_variable_random_uniform(output_dim, output_dim, name='Ui2_%d' % i) for i in range(num_support)], axis=0)
+            self.Uj2 = tf.stack([weight_variable_random_uniform(output_dim, output_dim, name='Uj2_%d' % i) for i in range(num_support)], axis=0)
+            self.Vi2 = tf.stack([weight_variable_random_uniform(output_dim, output_dim, name='Vi2_%d' % i) for i in range(num_support)], axis=0)
+            self.Vj2 = tf.stack([weight_variable_random_uniform(output_dim, output_dim, name='Vj2_%d' % i) for i in range(num_support)], axis=0)
+            self.bu2 = bias_variable_zero([output_dim], name="bu2")
+            self.bv2 = bias_variable_zero([output_dim], name="bv2")
             
             # resnet
             self.R = weight_variable_random_uniform(input_dim, output_dim, name='R')
 
+        self.dropout = dropout
         self.act = act
 
-        self.E_start = tf.split(E_start, axis=0, num_or_size_splits=num_support)
-        self.E_end = tf.split(E_end, axis=0, num_or_size_splits=num_support)
+        self.E_start = E_start_list
+        self.E_end = E_end_list
 
         if self.logging:
             self._log_vars()
 
+    def get_weight_variable(self, input_dim, output_dim, num_support, name):
+        var = weight_variable_random_uniform(input_dim, output_dim, name=name)
+        var = tf.split(value=var, axis=1, num_or_size_splits=num_support)
+        return var
+
+    def get_bias_variable(self, output_dim, num_support, name):
+        var = bias_variable_zero(output_dim, name=name)
+        var = tf.split(value=var, axis=0, num_or_size_splits=num_support)
+        return var
+
     def _call(self, inputs):
-        num_users = len(inputs[0])
-        num_items = len(inputs[1])
-        x = np.vstack(inputs)  # CHECK THIS! need to combine users and items into one single array
-            
-        # E_start, E_end : E x V
-        xin = x
-        # conv1
-        Vix = tf.matmul(x, self.Vi1)
-        Vjx = tf.matmul(x, self.Vj1)
-        x1 = tf.add_n([tf.matmul(E_end, Vix), tf.matmul(E_start, Vjx), self.bv1])
-        x1 = tf.nn.sigmoid(x1)
-        Uix = tf.matmul(x, self.Ui1)
-        x2 = tf.matmul(E_start, Uix)
-        Ujx = tf.matmul(x, self.Uj1)
-        x = tf.add_n([Ujx, tf.matmul(E_end.T, tf.multiply(x1, x2)), self.bu1])
-        x = tf.layers.batch_normalization(x)
-        x = tf.nn.relu(x)
+        num_users = inputs[0].dense_shape[0]
+        num_items = inputs[1].dense_shape[0]
+        users = tf.sparse_to_dense(inputs[0].indices, inputs[0].dense_shape, inputs[0].values)
+        items = tf.sparse_to_dense(inputs[1].indices, inputs[1].dense_shape, inputs[1].values)
+        original_x = tf.concat([users, items], axis=0)  # CHECK THIS! need to combine users and items into one single array. becomes 6000 (users+items) x 6000 (input_dim)
+        original_x = tf.nn.dropout(original_x, 1-self.dropout)
+        
+        outputs = []
+        Ui1 = 0.
+        Uj1 = 0.
+        Vi1 = 0.
+        Vj1 = 0.
+        for i in range(len(self.E_start)):
+            Ui1 += self.Ui1[i]
+            Uj1 += self.Uj1[i]
+            Vi1 += self.Vi1[i]
+            Vj1 += self.Vj1[i]
+            # E_start, E_end : E x V
+            x = original_x
+            # conv1
+            Vix = dot(x, Vi1)  # Vi1[i] is 6000x100
+            Vjx = dot(x, Vj1)
+            x1 = tf.add(dot(self.E_end[i], Vix, sparse=True), dot(self.E_start[i], Vjx, sparse=True))
+            x1 = tf.nn.bias_add(x1, self.bv1)
+            x1 = tf.nn.sigmoid(x1)
+            Uix = dot(x, Ui1)
+            x2 = dot(self.E_start[i], Uix, sparse=True)
+            Ujx = dot(x, Uj1)
+            x = tf.add(Ujx, dot(tf.sparse_transpose(self.E_end[i]), tf.multiply(x1, x2), sparse=True))
+            x = tf.nn.bias_add(x, self.bu1)
+            x = tf.layers.batch_normalization(x)
+            x = tf.nn.relu(x)
+            outputs.append(x)
+        output = tf.add_n(outputs)
 
-        # conv2
-        Vix = tf.matmul(x, self.Vi2)
-        Vjx = tf.matmul(x, self.Vj2)
-        x1 = tf.add_n([tf.matmul(E_end, Vix), tf.matmul(E_start, Vjx), self.bv2])
-        x1 = tf.nn.sigmoid(x1)
-        Uix = tf.matmul(x, self.Ui2)
-        x2 = tf.matmul(E_start, Uix)
-        Ujx = tf.matmul(x, self.Uj2)
-        x = tf.add_n([Ujx, tf.matmul(E_end.T, tf.multiply(x1, x2)), self.bu2])
-        x = tf.layers.batch_normalization(x)
+        outputs = []
+        Ui2 = 0.
+        Uj2 = 0.
+        Vi2 = 0.
+        Vj2 = 0.
+        for i in range(len(self.E_start)):
+            Ui2 += self.Ui2[i]
+            Uj2 += self.Uj2[i]
+            Vi2 += self.Vi2[i]
+            Vj2 += self.Vj2[i]
 
-        x = tf.add(x, tf.matmul(self.R, x))
-        x = tf.nn.relu(x)
+            x = output
+            # conv2
+            Vix = dot(x, Vi2)
+            Vjx = dot(x, Vj2)
+            x1 = tf.add(dot(self.E_end[i], Vix, sparse=True), dot(self.E_start[i], Vjx, sparse=True))
+            x1 = tf.nn.bias_add(x1, self.bv1)
+            x1 = tf.nn.sigmoid(x1)
+            Uix = dot(x, Ui2)
+            x2 = dot(self.E_start[i], Uix, sparse=True)
+            Ujx = dot(x, Uj2)
+            x = tf.add(Ujx, dot(tf.sparse_transpose(self.E_end[i]), tf.multiply(x1, x2), sparse=True))
+            x = tf.nn.bias_add(x, self.bu1)
+            x = tf.layers.batch_normalization(x)
+            outputs.append(x)
 
-        return x[:num_users], x[num_users:]
+        output = tf.add_n(outputs)
+        output = tf.add(output, tf.matmul(original_x, self.R))
+        output = tf.nn.relu(output)
+
+        u = output[:tf.cast(num_users, tf.int32)]
+        v = output[tf.cast(num_users, tf.int32):]
+
+        return u, v
 
     def __call__(self, inputs):
         with tf.name_scope(self.name):
-            if self.logging and not self.sparse_inputs:
+            if self.logging and not self.sparse_inputs: # this will if tensors are sparse. sparse_inputs flag needs to be set properly.
                 tf.summary.histogram(self.name + '/inputs_u', inputs[0])
                 tf.summary.histogram(self.name + '/inputs_v', inputs[1])
             outputs_u, outputs_v = self._call(inputs)
@@ -239,6 +287,7 @@ class StackRGGCN(Layer):
         super(StackRGGCN, self).__init__(**kwargs)
 
         assert output_dim % num_support == 0, 'output_dim must be multiple of num_support for stackGC layer'
+        assert len(E_start_list) == num_support, 'length of E_start not equal to num_support'
 
         self.sparse_inputs = sparse_inputs
 
@@ -262,18 +311,11 @@ class StackRGGCN(Layer):
             # resnet
             self.R = weight_variable_random_uniform(input_dim, output_dim, name='R')
 
+        self.dropout = dropout
         self.act = act
-        
-        # self.E_start = tf.split(E_start, axis=0, num_or_size_splits=num_support)
-        # self.E_start = tf.sparse_split(axis=0, num_split=num_support, sp_input=E_start)
-        # self.E_end = tf.split(E_end, axis=0, num_or_size_splits=num_support)
-        # self.E_end = tf.sparse_split(axis=0, num_split=num_support, sp_input=E_end)
 
-        self.E_start = []
-        self.E_end = []
-        for i in range(num_support):
-            self.E_start.append(E_start_list[i])
-            self.E_end.append(E_end_list[i])
+        self.E_start = E_start_list
+        self.E_end = E_end_list
 
         if self.logging:
             self._log_vars()
@@ -294,6 +336,7 @@ class StackRGGCN(Layer):
         users = tf.sparse_to_dense(inputs[0].indices, inputs[0].dense_shape, inputs[0].values)
         items = tf.sparse_to_dense(inputs[1].indices, inputs[1].dense_shape, inputs[1].values)
         original_x = tf.concat([users, items], axis=0)  # CHECK THIS! need to combine users and items into one single array. becomes 6000 (users+items) x 6000 (input_dim)
+        original_x = tf.nn.dropout(original_x, 1-self.dropout)
 
         outputs = []
         for i in range(len(self.E_start)):
@@ -335,8 +378,6 @@ class StackRGGCN(Layer):
         output = tf.concat(axis=1, values=outputs)
         output = tf.add(output, tf.matmul(original_x, self.R))
         output = tf.nn.relu(output)
-
-        outputs = self.act(output)
 
         u = output[:tf.cast(num_users, tf.int32)]
         v = output[tf.cast(num_users, tf.int32):]
