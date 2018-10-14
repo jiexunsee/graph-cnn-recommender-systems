@@ -154,7 +154,6 @@ class OrdinalRGGCN(Layer):
                  act=tf.nn.relu, share_user_item_weights=True, **kwargs):
         super(OrdinalRGGCN, self).__init__(**kwargs)
 
-        assert output_dim % num_support == 0, 'output_dim must be multiple of num_support for stackGC layer'
         assert len(E_start_list) == num_support, 'length of E_start not equal to num_support'
 
         self.sparse_inputs = sparse_inputs

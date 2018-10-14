@@ -217,8 +217,7 @@ def load_data_monti(dataset, testing=False):
         Wcol = load_matlab_file(path_dataset, 'W_movies')
         u_features = Wrow
         v_features = Wcol
-        # print(num_items, v_features.shape)
-        # v_features = np.eye(num_items)
+        # v_features = np.eye(num_items)  # uncomment this to make use of only user features!!
 
     elif dataset == 'douban':
         Wrow = load_matlab_file(path_dataset, 'W_users')
