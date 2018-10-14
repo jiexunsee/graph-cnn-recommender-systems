@@ -3,6 +3,7 @@
 * Set up Google Cloud Platform GPU instance, installing CUDA 9.0 and CUDNN so that TensorFlow 1.10 runs with GPU acceleration.
 * Translated PyTorch code from spatial graph convnets repo to TensorFlow code so that it runs within the framework by Berg et al. in GCMC
 * Initial results [here](https://drive.google.com/drive/u/1/folders/1iid714S1XqTvL129w2zl_wYioqdR7sno). The models where RGGCN is used instead of the original message passing method in GCMC are severely overfitting. Train RMSE is very much lower than test RMSE. However, the train RMSE is lower than that of the original model for most datasets.
+* Number of parameters much more using RGGCN. 16052760 parameters compared to 3048760 using GCMC. (more than 5x more)
 
 **Questions:**
 * Possible typo in [spatial graph convnets code](https://github.com/xbresson/spatial_graph_convnets/blob/master/01_residual_gated_graph_convnets_subgraph_matching.ipynb)
