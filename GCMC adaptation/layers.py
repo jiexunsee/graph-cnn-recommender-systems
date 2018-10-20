@@ -222,9 +222,9 @@ class OrdinalRGGCN(Layer):
             x1 = tf.nn.bias_add(x1, self.bv1)
             x1 = tf.nn.sigmoid(x1)
             Uix = dot(x, Ui1)
-            x2 = dot(self.E_start[i], Uix, sparse=True)
             Ujx = dot(x, Uj1)
-            x = tf.add(Ujx, dot(tf.sparse_transpose(self.E_end[i]), tf.multiply(x1, x2), sparse=True))
+            x2 = dot(self.E_start[i], Ujx, sparse=True)
+            x = tf.add(Uix, dot(tf.sparse_transpose(self.E_end[i]), tf.multiply(x1, x2), sparse=True))
             x = tf.nn.bias_add(x, self.bu1)
             x = tf.layers.batch_normalization(x)
             x = tf.nn.relu(x)
@@ -250,9 +250,9 @@ class OrdinalRGGCN(Layer):
             x1 = tf.nn.bias_add(x1, self.bv1)
             x1 = tf.nn.sigmoid(x1)
             Uix = dot(x, Ui2)
-            x2 = dot(self.E_start[i], Uix, sparse=True)
             Ujx = dot(x, Uj2)
-            x = tf.add(Ujx, dot(tf.sparse_transpose(self.E_end[i]), tf.multiply(x1, x2), sparse=True))
+            x2 = dot(self.E_start[i], Ujx, sparse=True)
+            x = tf.add(Uix, dot(tf.sparse_transpose(self.E_end[i]), tf.multiply(x1, x2), sparse=True))
             x = tf.nn.bias_add(x, self.bu1)
             x = tf.layers.batch_normalization(x)
             outputs.append(x)
@@ -330,10 +330,17 @@ class StackRGGCN(Layer):
         return var
 
     def _call(self, inputs):
-        num_users = inputs[0].dense_shape[0]
-        num_items = inputs[1].dense_shape[0]
-        users = tf.sparse_to_dense(inputs[0].indices, inputs[0].dense_shape, inputs[0].values)
-        items = tf.sparse_to_dense(inputs[1].indices, inputs[1].dense_shape, inputs[1].values)
+        if self.sparse_inputs:
+            num_users = inputs[0].dense_shape[0]
+            num_items = inputs[1].dense_shape[0]
+            users = tf.sparse_to_dense(inputs[0].indices, inputs[0].dense_shape, inputs[0].values)
+            items = tf.sparse_to_dense(inputs[1].indices, inputs[1].dense_shape, inputs[1].values)
+        else:
+            num_users = inputs[0].shape[0]
+            num_items = inputs[1].shape[0]
+            users = inputs[0]
+            items = inputs[1]
+        
         original_x = tf.concat([users, items], axis=0)  # CHECK THIS! need to combine users and items into one single array. becomes 6000 (users+items) x 6000 (input_dim)
         original_x = tf.nn.dropout(original_x, 1-self.dropout)
 
@@ -348,9 +355,9 @@ class StackRGGCN(Layer):
             x1 = tf.nn.bias_add(x1, self.bv1[i])
             x1 = tf.nn.sigmoid(x1)
             Uix = dot(x, self.Ui1[i])
-            x2 = dot(self.E_start[i], Uix, sparse=True)
             Ujx = dot(x, self.Uj1[i])
-            x = tf.add(Ujx, dot(tf.sparse_transpose(self.E_end[i]), tf.multiply(x1, x2), sparse=True))
+            x2 = dot(self.E_start[i], Ujx, sparse=True)
+            x = tf.add(Uix, dot(tf.sparse_transpose(self.E_end[i]), tf.multiply(x1, x2), sparse=True))
             x = tf.nn.bias_add(x, self.bu1[i])
             x = tf.layers.batch_normalization(x)
             x = tf.nn.relu(x)
@@ -367,9 +374,9 @@ class StackRGGCN(Layer):
             x1 = tf.nn.bias_add(x1, self.bv1[i])
             x1 = tf.nn.sigmoid(x1)
             Uix = dot(x, self.Ui2[i])
-            x2 = dot(self.E_start[i], Uix, sparse=True)
             Ujx = dot(x, self.Uj2[i])
-            x = tf.add(Ujx, dot(tf.sparse_transpose(self.E_end[i]), tf.multiply(x1, x2), sparse=True))
+            x2 = dot(self.E_start[i], Ujx, sparse=True)
+            x = tf.add(Uix, dot(tf.sparse_transpose(self.E_end[i]), tf.multiply(x1, x2), sparse=True))
             x = tf.nn.bias_add(x, self.bu1[i])
             x = tf.layers.batch_normalization(x)
             outputs.append(x)

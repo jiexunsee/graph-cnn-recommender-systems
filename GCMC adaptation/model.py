@@ -91,7 +91,7 @@ class Model(object):
 
 class RecommenderGAE(Model):
     def __init__(self, placeholders, input_dim, num_classes, num_support,
-                 learning_rate, num_basis_functions, hidden, num_users, num_items, accum,
+                 learning_rate, num_basis_functions, hidden, num_users, num_items, accum, num_layers,
                  self_connections=False, **kwargs):
         super(RecommenderGAE, self).__init__(**kwargs)
 
@@ -118,6 +118,7 @@ class RecommenderGAE(Model):
         self.num_items = num_items
         self.accum = accum
         self.learning_rate = learning_rate
+        self.num_layers = num_layers
 
         # standard settings: beta1=0.9, beta2=0.999, epsilon=1.e-8
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate, beta1=0.9, beta2=0.999, epsilon=1.e-8)
@@ -191,6 +192,20 @@ class RecommenderGAE(Model):
                                         dropout=self.dropout,
                                         logging=self.logging,
                                         share_user_item_weights=True))
+            for i in range(self.num_layers - 1):
+                self.layers.append(StackRGGCN(input_dim=self.hidden[0],
+                                        output_dim=self.hidden[0],
+                                        E_start_list=self.E_start_list,
+                                        E_end_list=self.E_end_list,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=False,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+
 
         elif self.accum == 'sumRGGCN':
             self.layers.append(OrdinalRGGCN(input_dim=self.input_dim,
@@ -201,6 +216,19 @@ class RecommenderGAE(Model):
                                         u_features_nonzero=self.u_features_nonzero,
                                         v_features_nonzero=self.v_features_nonzero,
                                         sparse_inputs=True,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+            for i in range(self.num_layers - 1):
+                self.layers.append(OrdinalRGGCN(input_dim=self.hidden[0],
+                                        output_dim=self.hidden[0],
+                                        E_start_list=self.E_start_list,
+                                        E_end_list=self.E_end_list,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=False,
                                         act=tf.nn.relu,
                                         dropout=self.dropout,
                                         logging=self.logging,

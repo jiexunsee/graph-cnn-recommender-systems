@@ -3,7 +3,8 @@ from __future__ import print_function
 
 import numpy as np
 import scipy.sparse as sp
-import cPickle as pkl
+# import cPickle as pkl
+import pickle as pkl
 import os
 import h5py
 import pandas as pd
@@ -269,7 +270,7 @@ def load_data_monti(dataset, testing=False):
     idx_nonzero_test = np.array([u * num_items + v for u, v in pairs_nonzero_test])  # rolling the index out into 1D, by doing u*num_items + v. this 1D index is later used to populate rating_mx_train
 
     # Internally shuffle training set (before splitting off validation set)
-    rand_idx = range(len(idx_nonzero_train))
+    rand_idx = list(range(len(idx_nonzero_train)))
     np.random.seed(42)
     np.random.shuffle(rand_idx)
     idx_nonzero_train = idx_nonzero_train[rand_idx]

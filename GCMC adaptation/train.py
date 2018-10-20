@@ -1,5 +1,7 @@
 """ Experiment runner for the model with knowledge graph attached to interaction data """
 
+# python train.py -d douban --accum stackRGGCN -do 0.7 -nleft -nb 2 -e 200 --hidden 100 75 --num_layers 5 --testing
+
 from __future__ import division
 from __future__ import print_function
 
@@ -39,6 +41,9 @@ ap.add_argument("-e", "--epochs", type=int, default=2500,
 
 ap.add_argument("-hi", "--hidden", type=int, nargs=2, default=[500, 75],
                 help="Number hidden units in 1st and 2nd layer")
+
+ap.add_argument("-numlay", "--num_layers", type=int, default=1,
+                help="Number of graph conv layers")
 
 ap.add_argument("-fhi", "--feat_hidden", type=int, default=64,
                 help="Number hidden units in the dense layer for features")
@@ -109,6 +114,7 @@ FEATURES = args['features']
 SYM = args['norm_symmetric']
 TESTING = args['testing']
 ACCUM = args['accumulation']
+NUM_LAYERS = args['num_layers']
 
 SELFCONNECTIONS = False
 SPLITFROMFILE = True
@@ -367,6 +373,7 @@ else:
                            num_items=num_items,
                            accum=ACCUM,
                            learning_rate=LR,
+                           num_layers=NUM_LAYERS,
                            logging=True)
 
 # Convert sparse placeholders to tuples to construct feed_dict. sparse placeholders expect tuple of (indices, values, shape)
@@ -540,7 +547,7 @@ else:
     print('polyak val rmse = ', val_rmse)
 
 print('\nSETTINGS:\n')
-for key, val in sorted(vars(ap.parse_args()).iteritems()):
+for key, val in sorted(vars(ap.parse_args()).items()):
     print(key, val)
 
 print('global seed = ', seed)
