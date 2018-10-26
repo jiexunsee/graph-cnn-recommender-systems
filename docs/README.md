@@ -7,6 +7,9 @@
 * Tried to test GCMC with more layers but code fails at `sparse_tensor` operations for `support` and `support_t`. GCMC paper only uses one message passing layer.
 * Experimenting with more RGGCN layers but still overfitting with poorer test accuracy than state-of-the-art.
 
+**Questions:**
+* Could a different architecture work better? E.g. edge gates are a major component of the RGGCN architecture but they may not be necessary in a recommender system task - all edges should probably be important in a recommender systems
+
 ## 15 Oct 2018
 **Progress:**
 * Set up Google Cloud Platform GPU instance, installing CUDA 9.0 and CUDNN so that TensorFlow 1.10 runs with GPU acceleration.
