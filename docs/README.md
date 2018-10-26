@@ -4,7 +4,7 @@
 * Experimented with using more RGGCN layers in the GCMC recommender system encoder-decoder framework
 
 **Obstacles:**
-* Tried to test GCMC with more layers but code fails at `sparse_tensor` operations for `support` and `support_t`.
+* Tried to test GCMC with more layers but code fails at `sparse_tensor` operations for `support` and `support_t`. GCMC paper only uses one message passing layer.
 * Experimenting with more RGGCN layers but still overfitting with poorer test accuracy than state-of-the-art.
 
 ## 15 Oct 2018
