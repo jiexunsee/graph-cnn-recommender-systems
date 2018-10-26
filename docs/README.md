@@ -3,6 +3,10 @@
 * Tested results using amended code for [spatial graph convnets](https://github.com/xbresson/spatial_graph_convnets)
 * Experimented with using more RGGCN layers in the GCMC recommender system encoder-decoder framework
 
+**Obstacles:**
+* Tried to test GCMC with more layers but code fails at `sparse_tensor` operations for `support` and `support_t`.
+* Experimenting with more RGGCN layers but still overfitting with poorer test accuracy than state-of-the-art.
+
 ## 15 Oct 2018
 **Progress:**
 * Set up Google Cloud Platform GPU instance, installing CUDA 9.0 and CUDNN so that TensorFlow 1.10 runs with GPU acceleration.
