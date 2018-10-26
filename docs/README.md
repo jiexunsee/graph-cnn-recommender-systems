@@ -2,6 +2,7 @@
 **Progress:**
 * Tested results using amended code for [spatial graph convnets](https://github.com/xbresson/spatial_graph_convnets)
 * Experimented with using more RGGCN layers in the GCMC recommender system encoder-decoder framework
+* Using the same technique as [spatial graph convnets](https://github.com/xbresson/spatial_graph_convnets) of decaying the learning rate when training loss does not improve, a better test RMSE is obtained.
 
 **Obstacles:**
 * Tried to test GCMC with more layers but code fails at `sparse_tensor` operations for `support` and `support_t`. GCMC paper only uses one message passing layer.
