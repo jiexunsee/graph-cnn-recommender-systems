@@ -401,6 +401,119 @@ class StackRGGCN(Layer):
                 tf.summary.histogram(self.name + '/outputs_v', outputs_v)
             return outputs_u, outputs_v
 
+""" NEW LAYER """
+class StackSimple(Layer):
+    """Residual gated graph convolutional layer (Bresson). adapted from stackGC layer """
+    def __init__(self, input_dim, output_dim, E_start_list, E_end_list, num_support, u_features_nonzero=None,
+                 v_features_nonzero=None, sparse_inputs=False, dropout=0.,
+                 act=tf.nn.relu, share_user_item_weights=True, **kwargs):
+        super(StackSimple, self).__init__(**kwargs)
+
+        assert output_dim % num_support == 0, 'output_dim must be multiple of num_support for stackGC layer'
+        assert len(E_start_list) == num_support, 'length of E_start not equal to num_support'
+
+        self.sparse_inputs = sparse_inputs
+
+        with tf.variable_scope(self.name + '_vars'):
+            # conv1 (with split weights)
+            self.Ui1 = self.get_weight_variable(input_dim, output_dim, num_support, 'Ui1')
+            self.Uj1 = self.get_weight_variable(input_dim, output_dim, num_support, 'Uj1')
+            self.Vi1 = self.get_weight_variable(input_dim, output_dim, num_support, 'Vi1')
+            self.Vj1 = self.get_weight_variable(input_dim, output_dim, num_support, 'Vj1')
+            self.bu1 = self.get_bias_variable(output_dim, num_support, 'bu1')
+            self.bv1 = self.get_bias_variable(output_dim, num_support, 'bv1')
+
+            # conv2 (with split weights)
+            self.Ui2 = self.get_weight_variable(output_dim, output_dim, num_support, 'Ui2')
+            self.Uj2 = self.get_weight_variable(output_dim, output_dim, num_support, 'Uj2')
+            self.Vi2 = self.get_weight_variable(output_dim, output_dim, num_support, 'Vi2')
+            self.Vj2 = self.get_weight_variable(output_dim, output_dim, num_support, 'Vj2')
+            self.bu2 = self.get_bias_variable(output_dim, num_support, 'bu2')
+            self.bv2 = self.get_bias_variable(output_dim, num_support, 'bv2')
+            
+            # resnet
+            self.R = weight_variable_random_uniform(input_dim, output_dim, name='R')
+
+        self.dropout = dropout
+        self.act = act
+
+        self.E_start = E_start_list
+        self.E_end = E_end_list
+
+        if self.logging:
+            self._log_vars()
+
+    def get_weight_variable(self, input_dim, output_dim, num_support, name):
+        var = weight_variable_random_uniform(input_dim, output_dim, name=name)
+        var = tf.split(value=var, axis=1, num_or_size_splits=num_support)
+        return var
+
+    def get_bias_variable(self, output_dim, num_support, name):
+        var = bias_variable_zero(output_dim, name=name)
+        var = tf.split(value=var, axis=0, num_or_size_splits=num_support)
+        return var
+
+    def _call(self, inputs):
+        if self.sparse_inputs:
+            num_users = inputs[0].dense_shape[0]
+            num_items = inputs[1].dense_shape[0]
+            users = tf.sparse_to_dense(inputs[0].indices, inputs[0].dense_shape, inputs[0].values)
+            items = tf.sparse_to_dense(inputs[1].indices, inputs[1].dense_shape, inputs[1].values)
+        else:
+            num_users = inputs[0].shape[0]
+            num_items = inputs[1].shape[0]
+            users = inputs[0]
+            items = inputs[1]
+        
+        original_x = tf.concat([users, items], axis=0)  # CHECK THIS! need to combine users and items into one single array. becomes 6000 (users+items) x 6000 (input_dim)
+        original_x = tf.nn.dropout(original_x, 1-self.dropout)
+
+        outputs = []
+        for i in range(len(self.E_start)):
+            # E_start, E_end : E x V
+            x = original_x
+            # conv1
+            Uix = dot(x, self.Ui1[i])
+            Ujx = dot(x, self.Uj1[i])
+            x2 = dot(self.E_start[i], Ujx, sparse=True)
+            x = tf.add(Uix, dot(tf.sparse_transpose(self.E_end[i]), x2, sparse=True))
+            x = tf.nn.bias_add(x, self.bu1[i])
+            x = tf.layers.batch_normalization(x)
+            x = tf.nn.relu(x)
+            outputs.append(x)
+        output = tf.concat(axis=1, values=outputs)
+
+        outputs = []
+        for i in range(len(self.E_start)):
+            x = output
+            # conv2
+            Uix = dot(x, self.Ui2[i])
+            Ujx = dot(x, self.Uj2[i])
+            x2 = dot(self.E_start[i], Ujx, sparse=True)
+            x = tf.add(Uix, dot(tf.sparse_transpose(self.E_end[i]), x2, sparse=True))
+            x = tf.nn.bias_add(x, self.bu1[i])
+            x = tf.layers.batch_normalization(x)
+            outputs.append(x)
+
+        output = tf.concat(axis=1, values=outputs)
+        output = tf.add(output, tf.matmul(original_x, self.R))
+        output = tf.nn.relu(output)
+
+        u = output[:tf.cast(num_users, tf.int32)]
+        v = output[tf.cast(num_users, tf.int32):]
+
+        return u, v
+
+    def __call__(self, inputs):
+        with tf.name_scope(self.name):
+            if self.logging and not self.sparse_inputs: # this will if tensors are sparse. sparse_inputs flag needs to be set properly.
+                tf.summary.histogram(self.name + '/inputs_u', inputs[0])
+                tf.summary.histogram(self.name + '/inputs_v', inputs[1])
+            outputs_u, outputs_v = self._call(inputs)
+            if self.logging:
+                tf.summary.histogram(self.name + '/outputs_u', outputs_u)
+                tf.summary.histogram(self.name + '/outputs_v', outputs_v)
+            return outputs_u, outputs_v
 
 class StackGCN(Layer):
     """Graph convolution layer for bipartite graphs and sparse inputs."""
@@ -462,8 +575,11 @@ class StackGCN(Layer):
             support = self.support[i]
             support_transpose = self.support_transpose[i]
 
+            # print('SUPPORT SHAPE: {}'.format(support.get_shape()))
             supports_u.append(tf.sparse_tensor_dense_matmul(support, tmp_v))
             supports_v.append(tf.sparse_tensor_dense_matmul(support_transpose, tmp_u))
+            # supports_u.append(dot(tf.sparse_tensor_to_dense(support), tmp_v, sparse=False))
+            # supports_v.append(dot(tf.sparse_tensor_to_dense(support_transpose), tmp_u, sparse=False))
 
         z_u = tf.concat(axis=1, values=supports_u)
         z_v = tf.concat(axis=1, values=supports_v)

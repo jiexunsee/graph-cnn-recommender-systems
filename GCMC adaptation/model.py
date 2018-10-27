@@ -117,7 +117,7 @@ class RecommenderGAE(Model):
         self.num_users = num_users
         self.num_items = num_items
         self.accum = accum
-        self.learning_rate = learning_rate
+        self.learning_rate = tf.Variable(learning_rate)
         self.num_layers = num_layers
 
         # standard settings: beta1=0.9, beta2=0.999, epsilon=1.e-8
@@ -130,7 +130,7 @@ class RecommenderGAE(Model):
         self.variables_averages_op = self.variable_averages.apply(tf.trainable_variables())
 
         with tf.control_dependencies([self.opt_op]):
-            self.training_op = tf.group(self.variables_averages_op)
+            self.training_op = tf.group(self.variables_averages_op) # training_op runs variable_averages_op too!!
 
         self.embeddings = self.activations[2]
 
@@ -179,6 +179,19 @@ class RecommenderGAE(Model):
                                         dropout=self.dropout,
                                         logging=self.logging,
                                         share_user_item_weights=True))
+            for i in range(self.num_layers - 1):
+                self.layers.append(StackGCN(input_dim=self.hidden[0],
+                                        output_dim=self.hidden[0],
+                                        support=self.support,
+                                        support_t=self.support_t,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=False,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
         elif self.accum == 'stackRGGCN':
             self.layers.append(StackRGGCN(input_dim=self.input_dim,
                                         output_dim=self.hidden[0],
@@ -194,6 +207,33 @@ class RecommenderGAE(Model):
                                         share_user_item_weights=True))
             for i in range(self.num_layers - 1):
                 self.layers.append(StackRGGCN(input_dim=self.hidden[0],
+                                        output_dim=self.hidden[0],
+                                        E_start_list=self.E_start_list,
+                                        E_end_list=self.E_end_list,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=False,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+
+        elif self.accum == 'stackSimple':
+            self.layers.append(StackSimple(input_dim=self.input_dim,
+                                        output_dim=self.hidden[0],
+                                        E_start_list=self.E_start_list,
+                                        E_end_list=self.E_end_list,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=True,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+            for i in range(self.num_layers - 1):
+                self.layers.append(StackSimple(input_dim=self.hidden[0],
                                         output_dim=self.hidden[0],
                                         E_start_list=self.E_start_list,
                                         E_end_list=self.E_end_list,
@@ -299,7 +339,7 @@ class RecommenderSideInfoGAE(Model):
         self.num_users = num_users
         self.num_items = num_items
         self.accum = accum
-        self.learning_rate = learning_rate
+        self.learning_rate = tf.Variable(learning_rate)
 
         # standard settings: beta1=0.9, beta2=0.999, epsilon=1.e-8
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate, beta1=0.9, beta2=0.999, epsilon=1.e-8)

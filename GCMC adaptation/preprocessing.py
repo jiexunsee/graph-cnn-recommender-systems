@@ -359,15 +359,25 @@ def get_edges_matrices(adj, separate=True):
                                                    shape=(nb_edges, nb_vertices) )
             edge_to_ending_vertex = sp.coo_matrix( ( np.ones(nb_edges) ,(np.arange(nb_edges), W_coo.col) ),
                                                    shape=(nb_edges, nb_vertices) )
+            
+            ### below is optional. to make edges unidirectional beginning from users to items.
+            # e_start = sp.coo_matrix.todense(edge_to_starting_vertex)
+            # e_end = sp.coo_matrix.todense(edge_to_ending_vertex)
+            # e_start[:, n_users:] = 0
+            # e_end[:, :n_users] = 0
+            # edge_to_starting_vertex = sp.coo_matrix(e_start)
+            # edge_to_ending_vertex = sp.coo_matrix(e_end)
+            ###
+
             E_start.append(edge_to_starting_vertex)
             E_end.append(edge_to_ending_vertex)
 
-        # print('E_START!!')
-        # for i in range(len(E_start)):
-        #     print(E_start[i].shape)
-        # print('E_END!!')
-        # for i in range(len(E_end)):
-        #     print(E_end[i].shape)
+        print('E_START!!')
+        for i in range(len(E_start)):
+            print(E_start[i].shape)
+        print('E_END!!')
+        for i in range(len(E_end)):
+            print(E_end[i].shape)
         return E_start, E_end
 
     else:
