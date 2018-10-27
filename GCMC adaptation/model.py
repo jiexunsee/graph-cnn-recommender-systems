@@ -483,10 +483,10 @@ class RecommenderSideInfoGAE(Model):
         feat_u = feat_hidden[0]
         feat_v = feat_hidden[1]
 
-        print(gcn_u)
-        print(feat_u)
-        print(gcn_v)  # (3000, 500)
-        print(feat_v)  # (?, 64)
+        print('gcn_u: {}'.format(gcn_u))
+        print('feat_u: {}'.format(feat_u))
+        print('gcn_v: {}'.format(gcn_v))  # (3000, 500)
+        print('feat_v: {}'.format(feat_v))  # (?, 64)
         input_u = tf.concat(values=[gcn_u, feat_u], axis=1)  # BREAKING HERE!
         input_v = tf.concat(values=[gcn_v, feat_v], axis=1)
 

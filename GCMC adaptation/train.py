@@ -45,6 +45,9 @@ ap.add_argument("-hi", "--hidden", type=int, nargs=2, default=[500, 75],
 ap.add_argument("-numlay", "--num_layers", type=int, default=1,
 				help="Number of graph conv layers")
 
+ap.add_argument("-cons", "--consecutive", type=int, default=2,
+				help="Number of consecutive failures to improve before decaying learning rate")
+
 ap.add_argument("-dr", "--decay_rate", type=float, default=1.25,
 				help="Decay rate of learning rate")
 
@@ -112,6 +115,7 @@ FEATHIDDEN = args['feat_hidden']
 BASES = args['num_basis_functions']
 LR = args['learning_rate']
 decay_rate = args['decay_rate']
+consecutive_threshold = args['consecutive']
 WRITESUMMARY = args['write_summary']
 SUMMARIESDIR = args['summaries_dir']
 FEATURES = args['features']
@@ -484,7 +488,7 @@ for epoch in range(NB_EPOCH):
 
 	if train_avg_loss > 0.999*old_loss:
 		consecutive += 1
-		if consecutive > 1:
+		if consecutive >= consecutive_threshold:
 			LR /= decay_rate
 			sess.run(assign_op, feed_dict={assign_placeholder: LR})
 			print('New learning rate is {}'.format(sess.run(model.optimizer._lr)))
