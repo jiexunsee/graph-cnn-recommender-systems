@@ -116,6 +116,8 @@ BASES = args['num_basis_functions']
 LR = args['learning_rate']
 decay_rate = args['decay_rate']
 consecutive_threshold = args['consecutive']
+print('consecutive threshold: {}'.format(consecutive_threshold))
+print(type(consecutive_threshold))
 WRITESUMMARY = args['write_summary']
 SUMMARIESDIR = args['summaries_dir']
 FEATURES = args['features']
@@ -492,6 +494,7 @@ for epoch in range(NB_EPOCH):
 			LR /= decay_rate
 			sess.run(assign_op, feed_dict={assign_placeholder: LR})
 			print('New learning rate is {}'.format(sess.run(model.optimizer._lr)))
+			consecutive = 0
 	else:
 		consecutive = 0
 	old_loss = train_avg_loss
