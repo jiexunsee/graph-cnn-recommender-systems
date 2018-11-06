@@ -1,3 +1,11 @@
+## 12 Nov 2018
+**Progress:**
+* Experimented with simple feed forward layers as user and item feature extractors - results are the best so far though still far off those of GCMC
+
+**To do:**
+* Find out about edge gating from Prof
+* Experiment with collaborative filtering in view of using its results as a baseline
+
 ## 29 Oct 2018
 **Progress:**
 * Tested results using amended code for [spatial graph convnets](https://github.com/xbresson/spatial_graph_convnets)
