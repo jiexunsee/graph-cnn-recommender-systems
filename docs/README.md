@@ -1,10 +1,10 @@
 ## 12 Nov 2018
 **Progress:**
-* Experimented with simple feed forward layers as user and item feature extractors - results are the best so far though still far off those of GCMC
+* Experimented with simple feed forward layers as user and item embedding extractors - results currently beat RGGCN though still worse than GCMC.
 
 **To do:**
 * Find out about edge gating from Prof
-* Experiment with collaborative filtering in view of using its results as a baseline
+* Experiment with various basic algorithms using surprise package, e.g. use collaborative filtering, matrix factorization. These results could be used as a benchmark. 
 
 ## 29 Oct 2018
 **Progress:**
