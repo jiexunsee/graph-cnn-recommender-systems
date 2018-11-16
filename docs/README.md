@@ -1,3 +1,10 @@
+## 26 Nov 2018
+**Progress:**
+* Corrected a bug in the code that caused some wrong labels to be fed to the model while training and testing. With this fix, RGGCN performs much better. Experimental results to come.
+
+**To do:**
+* Perform hyperparameter search to optimise RGGCN architecture for the various datasets.
+
 ## 12 Nov 2018
 **Progress:**
 * Experimented with simple feed forward layers as user and item embedding extractors - results currently beat RGGCN though still worse than GCMC.
