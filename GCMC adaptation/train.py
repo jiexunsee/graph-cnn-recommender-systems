@@ -1,6 +1,6 @@
 """ Experiment runner for the model with knowledge graph attached to interaction data """
 
-# python train.py -d douban --accum stackRGGCN -do 0.7 -nleft -nb 2 -e 200 --hidden 100 75 --num_layers 5 --testing
+# python train.py -d douban --accum stackRGGCN -do 0.7 -nleft -nb 2 -e 200 --hidden 100 75 --num_layers 5
 
 from __future__ import division
 from __future__ import print_function
@@ -54,7 +54,7 @@ ap.add_argument("-dr", "--decay_rate", type=float, default=1.25,
 ap.add_argument("-fhi", "--feat_hidden", type=int, default=64,
 				help="Number hidden units in the dense layer for features")
 
-ap.add_argument("-ac", "--accumulation", type=str, default="sum", choices=['sum', 'stack', 'stackRGGCN', 'sumRGGCN', 'stackSimple'],
+ap.add_argument("-ac", "--accumulation", type=str, default="sum", choices=['sum', 'stack', 'stackRGGCN', 'sumRGGCN', 'stackSimple', 'simple', 'stackGCNGate'],
 				help="Accumulation function: sum or stack or stackRGGCN or sumRGGCN.")
 
 ap.add_argument("-do", "--dropout", type=float, default=0.7,
@@ -99,6 +99,8 @@ fp.add_argument('-v', '--validation', dest='testing',
 				help="Option to only use validation set evaluation", action='store_false')
 ap.set_defaults(testing=False)
 
+ap.add_argument('-gi', '--use_gcmc_indices', action='store_true', help='Option to use original GCMC way of producing user/item indices')
+
 
 args = vars(ap.parse_args())
 
@@ -116,8 +118,6 @@ BASES = args['num_basis_functions']
 LR = args['learning_rate']
 decay_rate = args['decay_rate']
 consecutive_threshold = args['consecutive']
-print('consecutive threshold: {}'.format(consecutive_threshold))
-print(type(consecutive_threshold))
 WRITESUMMARY = args['write_summary']
 SUMMARIESDIR = args['summaries_dir']
 FEATURES = args['features']
@@ -125,6 +125,7 @@ SYM = args['norm_symmetric']
 TESTING = args['testing']
 ACCUM = args['accumulation']
 NUM_LAYERS = args['num_layers']
+GCMC_INDICES = args['use_gcmc_indices']
 
 SELFCONNECTIONS = False
 SPLITFROMFILE = True
@@ -212,6 +213,10 @@ elif FEATURES and u_features is not None and v_features is not None:
 else:
 	raise ValueError('Features flag is set to true but no features are loaded from dataset ' + DATASET)
 
+print("User features shape: " + str(u_features.shape))
+print("Item features shape: " + str(v_features.shape))
+print("adj_train shape: " + str(adj_train.shape))
+
 
 # global normalization
 support = []
@@ -246,6 +251,8 @@ support_t = sp.hstack(support_t, format='csr')
 # support is n_users x (n_items*n_ratings). support_t is n_items x (n_users*ratings)
 # NOTE: support is sparse matrix so the shape may not be as large as expected (?)
 # When is num_support ever not == num_rating_classes?
+print('support shape: ' + str(support.shape))
+print('support_t shape: ' + str(support_t.shape))
 
 if ACCUM == 'stack' or ACCUM == 'stackRGGCN':
 	div = HIDDEN[0] // num_support
@@ -256,41 +263,46 @@ if ACCUM == 'stack' or ACCUM == 'stackRGGCN':
 
 ##################################################################################################################
 """ support contains only training set ratings. index into support using user/item indices to create test set support. """
-# Collect all user and item nodes for test set
-test_u = list(set(test_u_indices))
-test_v = list(set(test_v_indices))
-test_u_dict = {n: i for i, n in enumerate(test_u)}
-test_v_dict = {n: i for i, n in enumerate(test_v)}
+test_support = val_support = train_support = support
+test_support_t = val_support_t = train_support_t = support_t
 
-test_u_indices = np.array([test_u_dict[o] for o in test_u_indices])
-test_v_indices = np.array([test_v_dict[o] for o in test_v_indices])
+if GCMC_INDICES:
+	# Collect all user and item nodes for test set
+	test_u = list(set(test_u_indices))
+	test_v = list(set(test_v_indices))
+	test_support = support[np.array(test_u)]
+	test_support_t = support_t[np.array(test_v)]
 
-test_support = support[np.array(test_u)]
-test_support_t = support_t[np.array(test_v)]
+	# Collect all user and item nodes for validation set
+	val_u = list(set(val_u_indices))
+	val_v = list(set(val_v_indices))
+	val_support = support[np.array(val_u)]
+	val_support_t = support_t[np.array(val_v)]
 
-# Collect all user and item nodes for validation set
-val_u = list(set(val_u_indices))
-val_v = list(set(val_v_indices))
-val_u_dict = {n: i for i, n in enumerate(val_u)}
-val_v_dict = {n: i for i, n in enumerate(val_v)}
+	# Collect all user and item nodes for train set
+	train_u = list(set(train_u_indices))
+	train_v = list(set(train_v_indices))
+	train_support = support[np.array(train_u)]
+	train_support_t = support_t[np.array(train_v)]
 
-val_u_indices = np.array([val_u_dict[o] for o in val_u_indices])
-val_v_indices = np.array([val_v_dict[o] for o in val_v_indices])
+	test_u_dict = {n: i for i, n in enumerate(test_u)}
+	test_v_dict = {n: i for i, n in enumerate(test_v)}
+	test_u_indices = np.array([test_u_dict[o] for o in test_u_indices])
+	test_v_indices = np.array([test_v_dict[o] for o in test_v_indices])
+	
+	val_u_dict = {n: i for i, n in enumerate(val_u)}
+	val_v_dict = {n: i for i, n in enumerate(val_v)}
+	val_u_indices = np.array([val_u_dict[o] for o in val_u_indices])
+	val_v_indices = np.array([val_v_dict[o] for o in val_v_indices])
 
-val_support = support[np.array(val_u)]
-val_support_t = support_t[np.array(val_v)]
+	train_u_dict = {n: i for i, n in enumerate(train_u)}
+	train_v_dict = {n: i for i, n in enumerate(train_v)}
+	print('max train_u_indices: {}'.format(max(train_u_indices)))
+	train_u_indices = np.array([train_u_dict[o] for o in train_u_indices]) ### HERE IS WHERE indices get changed to suit the new indexing into smaller set of users
+	train_v_indices = np.array([train_v_dict[o] for o in train_v_indices])
+	print('max train_u_indices after: {}'.format(max(train_u_indices)))
 
-# Collect all user and item nodes for train set
-train_u = list(set(train_u_indices))
-train_v = list(set(train_v_indices))
-train_u_dict = {n: i for i, n in enumerate(train_u)}
-train_v_dict = {n: i for i, n in enumerate(train_v)}
-
-train_u_indices = np.array([train_u_dict[o] for o in train_u_indices])
-train_v_indices = np.array([train_v_dict[o] for o in train_v_indices])
-
-train_support = support[np.array(train_u)]
-train_support_t = support_t[np.array(train_v)]
+print('train_support_shape: {}'.format(train_support.shape)) # if GCMC_INDICES, THIS IS NO LONGER (n_users, n_items*n_rating_types). but < n_users
 ##################################################################################################################
 
 # features as side info
@@ -421,7 +433,7 @@ train_feed_dict = construct_feed_dict(placeholders, u_features, v_features, u_fe
 									  train_labels, train_u_indices, train_v_indices, class_values, DO,
 									  train_u_features_side, train_v_features_side, train_E_start, train_E_end)
 
-# No dropout for validation and test runs. DO = dropout.
+# No dropout for validation and test runs. DO = dropout. input for val and test is same u_features and v_features.
 val_feed_dict = construct_feed_dict(placeholders, u_features, v_features, u_features_nonzero,
 									v_features_nonzero, val_support, val_support_t,
 									val_labels, val_u_indices, val_v_indices, class_values, 0.,
@@ -488,16 +500,16 @@ for epoch in range(NB_EPOCH):
 
 	val_avg_loss, val_rmse = sess.run([model.loss, model.rmse], feed_dict=val_feed_dict)
 
-	if train_avg_loss > 0.999*old_loss:
-		consecutive += 1
-		if consecutive >= consecutive_threshold:
-			LR /= decay_rate
-			sess.run(assign_op, feed_dict={assign_placeholder: LR})
-			print('New learning rate is {}'.format(sess.run(model.optimizer._lr)))
-			consecutive = 0
-	else:
-		consecutive = 0
-	old_loss = train_avg_loss
+	# if train_avg_loss > 0.999*old_loss:
+	# 	consecutive += 1
+	# 	if consecutive >= consecutive_threshold:
+	# 		LR /= decay_rate
+	# 		sess.run(assign_op, feed_dict={assign_placeholder: LR})
+	# 		print('New learning rate is {}'.format(sess.run(model.optimizer._lr)))
+	# 		consecutive = 0
+	# else:
+	# 	consecutive = 0
+	# old_loss = train_avg_loss
 
 	if VERBOSE:
 		print("[*] Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(train_avg_loss),
@@ -583,6 +595,6 @@ print('global seed = ', seed)
 # For parsing results from file
 results = vars(ap.parse_args()).copy()
 results.update({'best_val_score': float(best_val_score), 'best_epoch': best_epoch})
-print(json.dumps(results))
+print(json.dumps(results)) # dumps just dumps into a string, not for saving into a file
 
 sess.close()

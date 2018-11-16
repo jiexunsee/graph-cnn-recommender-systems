@@ -13,7 +13,7 @@ import random
 from urllib.request import urlopen
 from zipfile import ZipFile
 # from StringIO import StringIO
-from io import StringIO
+from io import StringIO, BytesIO
 import shutil
 import os.path
 
@@ -55,7 +55,8 @@ def map_data(data):
     uniq = list(set(data))
 
     id_dict = {old: new for new, old in enumerate(sorted(uniq))}
-    data = np.array(map(lambda x: id_dict[x], data))
+    # data = np.array(map(lambda x: id_dict[x], data)) # python 2 way
+    data = np.fromiter(map(lambda x: id_dict[x], data), int) # python 3 way
     n = len(uniq)
 
     return data, id_dict, n
@@ -76,7 +77,9 @@ def download_dataset(dataset, files, data_dir):
         else:
             raise ValueError('Invalid dataset option %s' % dataset)
 
-        with ZipFile(StringIO(request.read())) as zip_ref:
+        # with ZipFile(StringIO(request.read().decode('utf-8'))) as zip_ref:
+        #     zip_ref.extractall('data/')
+        with ZipFile(BytesIO(request.read())) as zip_ref:
             zip_ref.extractall('data/')
 
         source = [target_dir + '/' + s for s in os.listdir(target_dir)]

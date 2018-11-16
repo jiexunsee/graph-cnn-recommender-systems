@@ -274,6 +274,31 @@ class RecommenderGAE(Model):
                                         logging=self.logging,
                                         share_user_item_weights=True))
 
+        elif self.accum == 'simple':
+            self.layers.append(Simple(input_dim=self.input_dim,
+                                        output_dim=self.hidden[0],
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=True,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+
+        elif self.accum == 'stackGCNGate':
+            self.layers.append(StackGCNGate(input_dim=self.input_dim,
+                                        output_dim=self.hidden[0],
+                                        support=self.support,
+                                        support_t=self.support_t,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=True,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+
         else:
             raise ValueError('accumulation function option invalid, can only be stack or sum or stackRGGCN or sumRGGCN.')
 
@@ -285,8 +310,8 @@ class RecommenderGAE(Model):
                                  share_user_item_weights=True))
 
         self.layers.append(BilinearMixture(num_classes=self.num_classes,
-                                           u_indices=self.u_indices,
-                                           v_indices=self.v_indices,
+                                           u_indices=self.u_indices, # these are train indices
+                                           v_indices=self.v_indices, # these are train indices
                                            input_dim=self.hidden[1],
                                            num_users=self.num_users,
                                            num_items=self.num_items,
@@ -420,6 +445,20 @@ class RecommenderSideInfoGAE(Model):
                                         output_dim=self.hidden[0],
                                         E_start=self.E_start,
                                         E_end=self.E_end,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=True,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+
+        elif self.accum == 'stackGCNGate':
+            self.layers.append(StackGCNGate(input_dim=self.input_dim,
+                                        output_dim=self.hidden[0],
+                                        support=self.support,
+                                        support_t=self.support_t,
                                         num_support=self.num_support,
                                         u_features_nonzero=self.u_features_nonzero,
                                         v_features_nonzero=self.v_features_nonzero,

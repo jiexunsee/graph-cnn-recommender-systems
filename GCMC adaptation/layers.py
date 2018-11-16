@@ -299,6 +299,104 @@ class StackRGGCN(Layer):
             self.bu1 = self.get_bias_variable(output_dim, num_support, 'bu1')
             self.bv1 = self.get_bias_variable(output_dim, num_support, 'bv1')
 
+            # resnet
+            self.R = weight_variable_random_uniform(input_dim, output_dim, name='R')
+
+        self.dropout = dropout
+        self.act = act
+
+        self.E_start = E_start_list
+        self.E_end = E_end_list
+
+        if self.logging:
+            self._log_vars()
+
+    def get_weight_variable(self, input_dim, output_dim, num_support, name):
+        var = weight_variable_random_uniform(input_dim, output_dim, name=name)
+        var = tf.split(value=var, axis=1, num_or_size_splits=num_support)
+        return var
+
+    def get_bias_variable(self, output_dim, num_support, name):
+        var = bias_variable_zero(output_dim, name=name)
+        var = tf.split(value=var, axis=0, num_or_size_splits=num_support)
+        return var
+
+    def _call(self, inputs):
+        if self.sparse_inputs:
+            num_users = inputs[0].dense_shape[0]
+            num_items = inputs[1].dense_shape[0]
+            users = tf.sparse_to_dense(inputs[0].indices, inputs[0].dense_shape, inputs[0].values)
+            items = tf.sparse_to_dense(inputs[1].indices, inputs[1].dense_shape, inputs[1].values)
+        else:
+            num_users = inputs[0].shape[0]
+            num_items = inputs[1].shape[0]
+            users = inputs[0]
+            items = inputs[1]
+        
+        original_x = tf.concat([users, items], axis=0)  # CHECK THIS! need to combine users and items into one single array. becomes 6000 (users+items) x 6000 (input_dim)
+        original_x = tf.nn.dropout(original_x, 1-self.dropout)
+
+        outputs = []
+        for i in range(len(self.E_start)):
+            # E_start, E_end : E x V
+            x = original_x
+            # conv1
+            Vix = dot(x, self.Vi1[i])  # Vij[i] is 6000x100
+            Vjx = dot(x, self.Vj1[i])
+            x1 = tf.add(dot(self.E_end[i], Vix, sparse=True), dot(self.E_start[i], Vjx, sparse=True))
+            x1 = tf.nn.bias_add(x1, self.bv1[i])
+            x1 = tf.nn.sigmoid(x1)
+            Uix = dot(x, self.Ui1[i])
+            Ujx = dot(x, self.Uj1[i])
+            x2 = dot(self.E_start[i], Ujx, sparse=True)
+            x = tf.add(Uix, dot(tf.sparse_transpose(self.E_end[i]), tf.multiply(x1, x2), sparse=True))
+            x = tf.nn.bias_add(x, self.bu1[i])
+            x = tf.layers.batch_normalization(x)
+            x = tf.nn.relu(x)
+            outputs.append(x)
+        
+        output = tf.concat(axis=1, values=outputs)
+        output = tf.add(output, tf.matmul(original_x, self.R))
+        output = tf.nn.relu(output)
+
+        u = output[:tf.cast(num_users, tf.int32)]
+        v = output[tf.cast(num_users, tf.int32):]
+
+        return u, v
+
+    def __call__(self, inputs):
+        with tf.name_scope(self.name):
+            if self.logging and not self.sparse_inputs: # this will if tensors are sparse. sparse_inputs flag needs to be set properly.
+                tf.summary.histogram(self.name + '/inputs_u', inputs[0])
+                tf.summary.histogram(self.name + '/inputs_v', inputs[1])
+            outputs_u, outputs_v = self._call(inputs)
+            if self.logging:
+                tf.summary.histogram(self.name + '/outputs_u', outputs_u)
+                tf.summary.histogram(self.name + '/outputs_v', outputs_v)
+            return outputs_u, outputs_v
+
+""" NEW LAYER """
+class StackRGGCNDouble(Layer):
+    """Residual gated graph convolutional layer (Bresson). adapted from stackGC layer """
+    def __init__(self, input_dim, output_dim, E_start_list, E_end_list, num_support, u_features_nonzero=None,
+                 v_features_nonzero=None, sparse_inputs=False, dropout=0.,
+                 act=tf.nn.relu, share_user_item_weights=True, **kwargs):
+        super(StackRGGCNDouble, self).__init__(**kwargs)
+
+        assert output_dim % num_support == 0, 'output_dim must be multiple of num_support for stackGC layer'
+        assert len(E_start_list) == num_support, 'length of E_start not equal to num_support'
+
+        self.sparse_inputs = sparse_inputs
+
+        with tf.variable_scope(self.name + '_vars'):
+            # conv1 (with split weights)
+            self.Ui1 = self.get_weight_variable(input_dim, output_dim, num_support, 'Ui1')
+            self.Uj1 = self.get_weight_variable(input_dim, output_dim, num_support, 'Uj1')
+            self.Vi1 = self.get_weight_variable(input_dim, output_dim, num_support, 'Vi1')
+            self.Vj1 = self.get_weight_variable(input_dim, output_dim, num_support, 'Vj1')
+            self.bu1 = self.get_bias_variable(output_dim, num_support, 'bu1')
+            self.bv1 = self.get_bias_variable(output_dim, num_support, 'bv1')
+
             # conv2 (with split weights)
             self.Ui2 = self.get_weight_variable(output_dim, output_dim, num_support, 'Ui2')
             self.Uj2 = self.get_weight_variable(output_dim, output_dim, num_support, 'Uj2')
@@ -403,7 +501,7 @@ class StackRGGCN(Layer):
 
 """ NEW LAYER """
 class StackSimple(Layer):
-    """Residual gated graph convolutional layer (Bresson). adapted from stackGC layer """
+    """ GCN without edge gating """
     def __init__(self, input_dim, output_dim, E_start_list, E_end_list, num_support, u_features_nonzero=None,
                  v_features_nonzero=None, sparse_inputs=False, dropout=0.,
                  act=tf.nn.relu, share_user_item_weights=True, **kwargs):
@@ -515,6 +613,170 @@ class StackSimple(Layer):
                 tf.summary.histogram(self.name + '/outputs_v', outputs_v)
             return outputs_u, outputs_v
 
+""" NEW LAYER """
+class Simple(Layer):
+    """ Fully connected layer to produce graph node embeddings """
+    def __init__(self, input_dim, output_dim, u_features_nonzero=None,
+                 v_features_nonzero=None, sparse_inputs=False, dropout=0.,
+                 act=tf.nn.relu, share_user_item_weights=True, **kwargs):
+        super(Simple, self).__init__(**kwargs)
+        self.sparse_inputs = sparse_inputs
+
+        with tf.variable_scope(self.name + '_vars'):
+            self.W1 = weight_variable_random_uniform(input_dim, output_dim, name='W1')
+            self.b1 = bias_variable_zero(output_dim, name='b1')
+            self.W2 = weight_variable_random_uniform(output_dim, output_dim, name='W2')
+            self.b2 = bias_variable_zero(output_dim, name='b2')
+
+        self.dropout = dropout
+        self.act = act
+
+        if self.logging:
+            self._log_vars()
+
+    def get_weight_variable(self, input_dim, output_dim, num_support, name):
+        var = weight_variable_random_uniform(input_dim, output_dim, name=name)
+        var = tf.split(value=var, axis=1, num_or_size_splits=num_support)
+        return var
+
+    def get_bias_variable(self, output_dim, num_support, name):
+        var = bias_variable_zero(output_dim, name=name)
+        var = tf.split(value=var, axis=0, num_or_size_splits=num_support)
+        return var
+
+    def _call(self, inputs):
+        if self.sparse_inputs:
+            num_users = inputs[0].dense_shape[0]
+            num_items = inputs[1].dense_shape[0]
+            users = tf.sparse_to_dense(inputs[0].indices, inputs[0].dense_shape, inputs[0].values)
+            items = tf.sparse_to_dense(inputs[1].indices, inputs[1].dense_shape, inputs[1].values)
+        else:
+            num_users = inputs[0].shape[0]
+            num_items = inputs[1].shape[0]
+            users = inputs[0]
+            items = inputs[1]
+        
+        x = tf.concat([users, items], axis=0)  # CHECK THIS! need to combine users and items into one single array. becomes 6000 (users+items) x 6000 (input_dim)
+        x = tf.nn.dropout(x, 1-self.dropout)
+        x = tf.nn.bias_add(dot(x, self.W1), self.b1)
+        x = tf.nn.bias_add(dot(x, self.W2), self.b2)
+
+        u = x[:tf.cast(num_users, tf.int32)]
+        v = x[tf.cast(num_users, tf.int32):]
+
+        return u, v
+
+    def __call__(self, inputs):
+        with tf.name_scope(self.name):
+            if self.logging and not self.sparse_inputs: # this will if tensors are sparse. sparse_inputs flag needs to be set properly.
+                tf.summary.histogram(self.name + '/inputs_u', inputs[0])
+                tf.summary.histogram(self.name + '/inputs_v', inputs[1])
+            outputs_u, outputs_v = self._call(inputs)
+            if self.logging:
+                tf.summary.histogram(self.name + '/outputs_u', outputs_u)
+                tf.summary.histogram(self.name + '/outputs_v', outputs_v)
+            return outputs_u, outputs_v
+
+""" NEW LAYER """
+class StackGCNGate(Layer):
+    """Graph convolution layer for bipartite graphs and sparse inputs. (WITH GATE)"""
+
+    def __init__(self, input_dim, output_dim, support, support_t, num_support, u_features_nonzero=None,
+                 v_features_nonzero=None, sparse_inputs=False, dropout=0.,
+                 act=tf.nn.relu, share_user_item_weights=True, **kwargs):
+        super(StackGCNGate, self).__init__(**kwargs)
+
+        assert output_dim % num_support == 0, 'output_dim must be multiple of num_support for stackGC layer'
+
+        with tf.variable_scope(self.name + '_vars'):
+            self.vars['weights_u'] = weight_variable_random_uniform(input_dim, output_dim, name='weights_u')
+
+            if not share_user_item_weights:
+                self.vars['weights_v'] = weight_variable_random_uniform(input_dim, output_dim, name='weights_v')
+
+            else:
+                self.vars['weights_v'] = self.vars['weights_u']
+
+        self.weights_u = tf.split(value=self.vars['weights_u'], axis=1, num_or_size_splits=num_support)  # <-- HERE is where weights get split
+        self.weights_v = tf.split(value=self.vars['weights_v'], axis=1, num_or_size_splits=num_support)
+
+        self.weights_A = weight_variable_random_uniform(input_dim, output_dim, name='weights_A') # weight to calculate edge gate
+        self.weights_B = weight_variable_random_uniform(input_dim, output_dim, name='weights_B') # weight to calculate edge gate
+        self.weights_A = tf.split(value=self.weights_A, axis=1, num_or_size_splits=num_support)  # <-- HERE is where weights get split
+        self.weights_B = tf.split(value=self.weights_B, axis=1, num_or_size_splits=num_support)
+
+        self.dropout = dropout
+
+        self.sparse_inputs = sparse_inputs
+        self.u_features_nonzero = u_features_nonzero
+        self.v_features_nonzero = v_features_nonzero
+        if sparse_inputs:
+            assert u_features_nonzero is not None and v_features_nonzero is not None, \
+                'u_features_nonzero and v_features_nonzero can not be None when sparse_inputs is True'
+
+        self.support = tf.sparse_split(axis=1, num_split=num_support, sp_input=support)
+        self.support_transpose = tf.sparse_split(axis=1, num_split=num_support, sp_input=support_t)
+
+        self.act = act
+
+        if self.logging:
+            self._log_vars()
+
+    def _call(self, inputs):
+        x_u = inputs[0]
+        x_v = inputs[1]
+
+        if self.sparse_inputs:
+            x_u = dropout_sparse(x_u, 1 - self.dropout, self.u_features_nonzero)
+            x_v = dropout_sparse(x_v, 1 - self.dropout, self.v_features_nonzero)
+        else:
+            x_u = tf.nn.dropout(x_u, 1 - self.dropout)
+            x_v = tf.nn.dropout(x_v, 1 - self.dropout)
+
+        supports_u = []
+        supports_v = []
+
+        for i in range(len(self.support)):
+            tmp_u = dot(x_u, self.weights_u[i], sparse=self.sparse_inputs)
+            tmp_v = dot(x_v, self.weights_v[i], sparse=self.sparse_inputs)
+
+            A = dot(x_u, self.weights_A[i], sparse=self.sparse_inputs)
+            B = dot(x_v, self.weights_B[i], sparse=self.sparse_inputs)
+            gate = tf.nn.sigmoid(tf.add(A, B))
+
+            support = self.support[i]
+            support_transpose = self.support_transpose[i]
+
+            # print('SUPPORT SHAPE: {}'.format(support.get_shape()))
+
+            tmp_v = tf.multiply(tmp_v, gate)
+            tmp_u = tf.multiply(tmp_u, gate)
+            mu_u = tf.sparse_tensor_dense_matmul(support, tmp_v)
+            mu_v = tf.sparse_tensor_dense_matmul(support_transpose, tmp_u)
+            supports_u.append(mu_u)
+            supports_v.append(mu_v)
+            # supports_u.append(dot(tf.sparse_tensor_to_dense(support), tmp_v, sparse=False))
+            # supports_v.append(dot(tf.sparse_tensor_to_dense(support_transpose), tmp_u, sparse=False))
+
+        z_u = tf.concat(axis=1, values=supports_u)
+        z_v = tf.concat(axis=1, values=supports_v)
+
+        u_outputs = self.act(z_u)
+        v_outputs = self.act(z_v)
+
+        return u_outputs, v_outputs
+
+    def __call__(self, inputs):
+        with tf.name_scope(self.name):
+            if self.logging and not self.sparse_inputs:
+                tf.summary.histogram(self.name + '/inputs_u', inputs[0])
+                tf.summary.histogram(self.name + '/inputs_v', inputs[1])
+            outputs_u, outputs_v = self._call(inputs)
+            if self.logging:
+                tf.summary.histogram(self.name + '/outputs_u', outputs_u)
+                tf.summary.histogram(self.name + '/outputs_v', outputs_v)
+            return outputs_u, outputs_v
+
 class StackGCN(Layer):
     """Graph convolution layer for bipartite graphs and sparse inputs."""
 
@@ -577,7 +839,7 @@ class StackGCN(Layer):
 
             # print('SUPPORT SHAPE: {}'.format(support.get_shape()))
             supports_u.append(tf.sparse_tensor_dense_matmul(support, tmp_v))
-            supports_v.append(tf.sparse_tensor_dense_matmul(support_transpose, tmp_u))
+            supports_v.append(tf.sparse_tensor_dense_matmul(support_transpose, tmp_u)) # for second layer it seems tmp_u is only 2999-dim
             # supports_u.append(dot(tf.sparse_tensor_to_dense(support), tmp_v, sparse=False))
             # supports_v.append(dot(tf.sparse_tensor_to_dense(support_transpose), tmp_u, sparse=False))
 
@@ -586,6 +848,8 @@ class StackGCN(Layer):
 
         u_outputs = self.act(z_u)
         v_outputs = self.act(z_v)
+
+        print('shape of u_outputs: {}'.format(u_outputs.shape))
 
         return u_outputs, v_outputs
 
@@ -792,15 +1056,13 @@ class BilinearMixture(Layer):
         u_inputs = tf.nn.dropout(inputs[0], 1 - self.dropout)
         v_inputs = tf.nn.dropout(inputs[1], 1 - self.dropout)
 
-        u_inputs = tf.gather(u_inputs, self.u_indices)
+        u_inputs = tf.gather(u_inputs, self.u_indices) # only predicting for these indices
         v_inputs = tf.gather(v_inputs, self.v_indices)
+        # u_inputs = tf.gather(u_inputs, [0, 1, 200, 2999]) # this won't work because u_indices only has 2999 elements
 
         if self.user_item_bias:
             u_bias = tf.gather(self.vars['user_bias'], self.u_indices)
             v_bias = tf.gather(self.vars['item_bias'], self.v_indices)
-        else:
-            u_bias = None
-            v_bias = None
 
         basis_outputs = []
         for i in range(self.num_weights):
@@ -810,7 +1072,7 @@ class BilinearMixture(Layer):
 
             basis_outputs.append(x)
 
-        # Store outputs in (Nu x Nv) x num_classes tensor and apply activation function
+        # Store outputs in (Nu x Nv) x num_classes (num_weights?) tensor and apply activation function. (activation function only applied later?)
         basis_outputs = tf.stack(basis_outputs, axis=1)
 
         outputs = tf.matmul(basis_outputs,  self.vars['weights_scalars'], transpose_b=False)
