@@ -241,8 +241,8 @@ def load_data_monti(dataset, testing=False):
 
     print('number of users who gave ratings: {}'.format(len(set(u_nodes))))
     print('number of item that received ratings: {}'.format(len(set(v_nodes))))
-    print('number of users: {}'.format(num_users))
-    print('number of items: {}'.format(num_items))
+    # print('number of users: {}'.format(num_users))
+    # print('number of items: {}'.format(num_items))
 
     neutral_rating = -1  # int(np.ceil(np.float(num_classes)/2.)) - 1
 
@@ -260,8 +260,8 @@ def load_data_monti(dataset, testing=False):
 
     # number of test and validation edges
     num_train = np.where(Otraining)[0].shape[0]
-    print('Otraining shape: {}'.format(Otraining.shape))
-    print('number of train (+ val): {}'.format(num_train))
+    # print('Otraining shape: {}'.format(Otraining.shape))
+    # print('number of train (+ val): {}'.format(num_train))
     num_test = np.where(Otest)[0].shape[0]
     num_val = int(np.ceil(num_train * 0.2))
     num_train = num_train - num_val
@@ -307,7 +307,7 @@ def load_data_monti(dataset, testing=False):
     val_labels = labels[val_idx]
     test_labels = labels[test_idx]
 
-    print('train labels shape: {}'.format(train_labels.shape))
+    # print('train labels shape: {}'.format(train_labels.shape))
 
     if testing: # if testing, this will combine the train and val idx to form a bigger training set
         u_train_idx = np.hstack([u_train_idx, u_val_idx])
@@ -345,8 +345,8 @@ def get_edges_matrices(adj, separate=True):
     adj = new_adj
     if separate:
         unique_ratings = np.unique(adj)
-        print(unique_ratings)
-        print(len(unique_ratings))
+        # print(unique_ratings)
+        # print(len(unique_ratings))
         nb_vertices = adj.shape[0]
         E_start = []
         E_end = []
@@ -375,12 +375,12 @@ def get_edges_matrices(adj, separate=True):
             E_start.append(edge_to_starting_vertex)
             E_end.append(edge_to_ending_vertex)
 
-        print('E_START!!')
-        for i in range(len(E_start)):
-            print(E_start[i].shape)
-        print('E_END!!')
-        for i in range(len(E_end)):
-            print(E_end[i].shape)
+        # print('E_START!!')
+        # for i in range(len(E_start)):
+        #     print(E_start[i].shape)
+        # print('E_END!!')
+        # for i in range(len(E_end)):
+        #     print(E_end[i].shape)
         return E_start, E_end
 
     else:

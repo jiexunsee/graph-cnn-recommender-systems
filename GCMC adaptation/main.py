@@ -112,9 +112,9 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 	else:
 		raise ValueError('Features flag is set to true but no features are loaded from dataset ' + DATASET)
 
-	print("User features shape: " + str(u_features.shape))
-	print("Item features shape: " + str(v_features.shape))
-	print("adj_train shape: " + str(adj_train.shape))
+	# print("User features shape: " + str(u_features.shape))
+	# print("Item features shape: " + str(v_features.shape))
+	# print("adj_train shape: " + str(adj_train.shape))
 
 
 	# global normalization
@@ -150,8 +150,8 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 	# support is n_users x (n_items*n_ratings). support_t is n_items x (n_users*ratings)
 	# NOTE: support is sparse matrix so the shape may not be as large as expected (?)
 	# When is num_support ever not == num_rating_classes?
-	print('support shape: ' + str(support.shape))
-	print('support_t shape: ' + str(support_t.shape))
+	# print('support shape: ' + str(support.shape))
+	# print('support_t shape: ' + str(support_t.shape))
 
 	if ACCUM == 'stack' or ACCUM == 'stackRGGCN':
 		div = HIDDEN[0] // num_support
@@ -201,7 +201,7 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 		train_v_indices = np.array([train_v_dict[o] for o in train_v_indices])
 		print('max train_u_indices after: {}'.format(max(train_u_indices)))
 
-	print('train_support_shape: {}'.format(train_support.shape)) # if GCMC_INDICES, THIS IS NO LONGER (n_users, n_items*n_rating_types). but < n_users
+	# print('train_support_shape: {}'.format(train_support.shape)) # if GCMC_INDICES, THIS IS NO LONGER (n_users, n_items*n_rating_types). but < n_users
 	##################################################################################################################
 
 	# features as side info
@@ -261,7 +261,7 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 		placeholders['E_start_list'].append(tf.sparse_placeholder(tf.float32, shape=(None, None)))
 		placeholders['E_end_list'].append(tf.sparse_placeholder(tf.float32, shape=(None, None)))
 
-	print('shape of E_end for first rating type: {}'.format(E_end[0].toarray().shape))
+	# print('shape of E_end for first rating type: {}'.format(E_end[0].toarray().shape))
 
 	##################################################################################################################
 
@@ -317,8 +317,8 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 	# setting E_start to be the same for train, val, and test. E_start already only contains train edges (from preprocessing script)
 	train_E_start = []
 	train_E_end = []
-	print('LENGTH OF E_START: {}'.format(len(E_start)))
-	print('NUM_SUPPORT: {}'.format(num_support))
+	# print('LENGTH OF E_START: {}'.format(len(E_start)))
+	# print('NUM_SUPPORT: {}'.format(num_support))
 	for i in range(num_support):
 		train_E_start.append(sparse_to_tuple(E_start[i]))
 		train_E_end.append(sparse_to_tuple(E_end[i]))
@@ -378,7 +378,7 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 	assign_placeholder = tf.placeholder(tf.float32)
 	assign_op = model.learning_rate.assign(assign_placeholder)
 	old_loss = float('inf')
-	print('Original learning rate is {}'.format(sess.run(model.optimizer._lr)))
+	# print('Original learning rate is {}'.format(sess.run(model.optimizer._lr)))
 
 	train_rmses, val_rmses, train_losses, val_losses = [], [], [], []
 	for epoch in tqdm(range(NB_EPOCH)):
