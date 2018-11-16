@@ -1,3 +1,18 @@
+## 26 Nov 2018
+**Progress:**
+* Corrected a bug in the code that caused some wrong labels to be fed to the model while training and testing. With this fix, RGGCN performs much better. Experimental results to come.
+
+**To do:**
+* Perform hyperparameter search to optimise RGGCN architecture for the various datasets.
+
+## 12 Nov 2018
+**Progress:**
+* Experimented with simple feed forward layers as user and item embedding extractors - results currently beat RGGCN though still worse than GCMC.
+
+**To do:**
+* Find out about edge gating from Prof
+* Experiment with various basic algorithms using surprise package, e.g. use collaborative filtering, matrix factorization. These results could be used as a benchmark. 
+
 ## 29 Oct 2018
 **Progress:**
 * Tested results using amended code for [spatial graph convnets](https://github.com/xbresson/spatial_graph_convnets)
