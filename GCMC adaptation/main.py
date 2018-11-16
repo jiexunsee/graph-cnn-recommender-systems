@@ -475,6 +475,7 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 		print('polyak test rmse = ', test_rmse)
 
 		sess.close()
+		tf.reset_default_graph()
 		return train_rmses, val_rmses, train_losses, val_losses, test_rmse
 	else:
 		# restore with polyak averages of parameters
@@ -487,4 +488,5 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 		print('polyak val rmse = ', val_rmse)
 
 		sess.close()
+		tf.reset_default_graph()
 		return train_rmses, val_rmses, train_losses, val_losses, val_rmse
