@@ -10,15 +10,15 @@ iterations = 5
 # HIDDEN = [[100, 75], [300, 75]]
 # NUM_LAYERS = [1, 2, 3]
 
-# NB_EPOCH = [2, 2]
+# NB_EPOCH = [300, 400]
 # DO = [0.7]
-# HIDDEN = [[100, 75]]
-# NUM_LAYERS = [3]
+# HIDDEN = [[100, 75], [300, 75]]
+# NUM_LAYERS = [2, 3, 4, 5]
 
-NB_EPOCH = [300, 400]
-DO = [0.7]
-HIDDEN = [[100, 75], [300, 75]]
-NUM_LAYERS = [2, 3, 4, 5]
+NB_EPOCH = [300]
+DO = [0.5, 0.7]
+HIDDEN = [[75, 50], [150, 75], [200, 100]]
+NUM_LAYERS = [1, 2, 3]
 
 DATASET = 'douban'
 TESTING = False
