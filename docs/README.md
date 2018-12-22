@@ -1,3 +1,6 @@
+## 22 Dec 2018
+* RGGCN doesn't perform very well using 3 or more layers. Best results so far using 1 or 2 layers. Testing done on Douban dataset so far.
+
 ## 26 Nov 2018
 **Progress:**
 * Corrected a bug in the code that caused some wrong labels to be fed to the model while training and testing. With this fix, RGGCN performs much better. Experimental results to come.
