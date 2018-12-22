@@ -24,6 +24,7 @@ DATASET = 'douban'
 TESTING = False
 
 for combo in product(NB_EPOCH, DO, HIDDEN, NUM_LAYERS):
+	save_name = '-'.join(['{}_{}'.format(c, p) for p, c in zip(params_to_optimise, combo)])
 	for i in range(iterations):
 		print('runnning experiment for {}'.format(save_name))
 		params_dict = {'NB_EPOCH': combo[0], 'DO': combo[1], 'HIDDEN': combo[2], 'NUM_LAYERS': combo[3]}
@@ -42,7 +43,7 @@ for combo in product(NB_EPOCH, DO, HIDDEN, NUM_LAYERS):
 		results = {'train_rmses': all_train_rmses, 'val_rmses': all_val_rmses, 'train_losses': all_train_losses, 'val_losses': all_val_losses, 'test_rmse': all_rmse}
 	else:
 		results = {'train_rmses': all_train_rmses, 'val_rmses': all_val_rmses, 'train_losses': all_train_losses, 'val_losses': all_val_losses, 'val_rmse': all_rmse}
-	save_name = '-'.join(['{}_{}'.format(c, p) for p, c in zip(params_to_optimise, combo)])
+	
 	pickle.dump(results, open('results/'+save_name+'.pkl', 'wb'))
 
 print('hyperparameter search done!')
