@@ -20,7 +20,7 @@ DO = [0.5, 0.7]
 HIDDEN = [[75, 50], [150, 75], [200, 100]]
 NUM_LAYERS = [1, 2, 3]
 
-DATASET = 'douban'
+DATASET = 'flixster'
 TESTING = False
 
 for combo in product(NB_EPOCH, DO, HIDDEN, NUM_LAYERS):
