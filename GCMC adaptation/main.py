@@ -20,13 +20,12 @@ from model import RecommenderGAE, RecommenderSideInfoGAE
 from utils import construct_feed_dict
 
 def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HIDDEN=[100, 75], FEATHIDDEN=64, LR=0.01, decay_rate=1.25, consecutive_threshold=5, 
-	FEATURES=False, SYM=True, TESTING=False, ACCUM='stackRGGCN', NUM_LAYERS=1, GCMC_INDICES=False):
+	FEATURES=False, SYM=True, TESTING=False, ACCUM='stackRGGCN', NUM_LAYERS=1, GCMC_INDICES=False, VERBOSE=False):
 	np.random.seed(random_seed)
 	tf.set_random_seed(random_seed)
 
 	SELFCONNECTIONS = False
 	SPLITFROMFILE = True
-	VERBOSE = False
 	BASES = 2
 	WRITESUMMARY = False
 	SUMMARIESDIR = 'logs/'
