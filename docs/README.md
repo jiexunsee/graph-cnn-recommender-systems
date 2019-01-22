@@ -1,3 +1,7 @@
+## 22 Jan 2019
+* Updated model that includes side features, such that it can now use multiple graph convolution layers.
+* Working on interim report.
+
 ## 22 Dec 2018
 * RGGCN doesn't perform very well using 3 or more layers. Best results so far using 1 or 2 layers. Testing done on Douban dataset so far.
 
