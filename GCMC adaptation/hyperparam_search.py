@@ -28,6 +28,8 @@ ACCUM = 'stackRGGCN'
 
 for combo in product(NB_EPOCH, DO, HIDDEN, NUM_LAYERS):
 	save_name = '-'.join(['{}_{}'.format(c, p) for p, c in zip(params_to_optimise, combo)])
+	if FEATURES:
+		save_name += 'features'
 	all_train_rmses, all_val_rmses, all_train_losses, all_val_losses, all_rmse = [], [], [], [], []
 	for i in range(iterations):
 		print('runnning experiment for {}'.format(save_name))
