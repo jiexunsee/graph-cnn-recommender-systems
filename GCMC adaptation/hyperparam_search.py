@@ -3,7 +3,7 @@ from itertools import product
 import pickle
 
 params_to_optimise = ['epochs', 'DO', 'hidden', 'layers'] # must correspond to below
-iterations = 5
+iterations = 3
 
 # NB_EPOCH = [125, 200]
 # DO = [0.3, 0.5, 0.7]
@@ -28,6 +28,8 @@ ACCUM = 'stackRGGCN'
 
 for combo in product(NB_EPOCH, DO, HIDDEN, NUM_LAYERS):
 	save_name = '-'.join(['{}_{}'.format(c, p) for p, c in zip(params_to_optimise, combo)])
+	if FEATURES:
+		save_name += 'features'
 	all_train_rmses, all_val_rmses, all_train_losses, all_val_losses, all_rmse = [], [], [], [], []
 	for i in range(iterations):
 		print('runnning experiment for {}'.format(save_name))
