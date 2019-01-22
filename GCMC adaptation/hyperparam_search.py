@@ -3,7 +3,7 @@ from itertools import product
 import pickle
 
 params_to_optimise = ['epochs', 'DO', 'hidden', 'layers'] # must correspond to below
-iterations = 5
+iterations = 3
 
 # NB_EPOCH = [125, 200]
 # DO = [0.3, 0.5, 0.7]
