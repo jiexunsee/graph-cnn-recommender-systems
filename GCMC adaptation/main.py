@@ -205,15 +205,24 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 
 	# features as side info
 	if FEATURES:
-		test_u_features_side = u_features_side[np.array(test_u)]
-		test_v_features_side = v_features_side[np.array(test_v)]
+		if GCMC_INDICES:
+			test_u_features_side = u_features_side[np.array(test_u)]
+			test_v_features_side = v_features_side[np.array(test_v)]
 
-		val_u_features_side = u_features_side[np.array(val_u)]
-		val_v_features_side = v_features_side[np.array(val_v)]
+			val_u_features_side = u_features_side[np.array(val_u)]
+			val_v_features_side = v_features_side[np.array(val_v)]
 
-		train_u_features_side = u_features_side[np.array(train_u)]
-		train_v_features_side = v_features_side[np.array(train_v)]
+			train_u_features_side = u_features_side[np.array(train_u)]
+			train_v_features_side = v_features_side[np.array(train_v)]
+		else:
+			test_u_features_side = u_features_side
+			test_v_features_side = v_features_side
 
+			val_u_features_side = u_features_side
+			val_v_features_side = v_features_side
+
+			train_u_features_side = u_features_side
+			train_v_features_side = v_features_side
 	else:
 		test_u_features_side = None
 		test_v_features_side = None
