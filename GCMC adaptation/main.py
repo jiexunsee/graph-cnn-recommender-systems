@@ -279,6 +279,7 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 									   accum=ACCUM,
 									   learning_rate=LR,
 									   num_side_features=num_side_features,
+									   num_layers=NUM_LAYERS,
 									   logging=True)
 	else:
 		model = RecommenderGAE(placeholders,

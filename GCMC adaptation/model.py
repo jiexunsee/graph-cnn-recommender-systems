@@ -284,9 +284,32 @@ class RecommenderGAE(Model):
                                         dropout=self.dropout,
                                         logging=self.logging,
                                         share_user_item_weights=True))
+            for i in range(self.num_layers - 1):
+                self.layers.append(Simple(input_dim=self.hidden[0],
+                                        output_dim=self.hidden[0],
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=False,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
 
         elif self.accum == 'stackGCNGate':
             self.layers.append(StackGCNGate(input_dim=self.input_dim,
+                                        output_dim=self.hidden[0],
+                                        support=self.support,
+                                        support_t=self.support_t,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=True,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+            for i in range(self.num_layers - 1):
+                self.layers.append(StackGCNGate(input_dim=self.hidden[0],
                                         output_dim=self.hidden[0],
                                         support=self.support,
                                         support_t=self.support_t,
@@ -311,7 +334,7 @@ class RecommenderGAE(Model):
 
         self.layers.append(BilinearMixture(num_classes=self.num_classes,
                                            u_indices=self.u_indices, # these are train indices
-                                           v_indices=self.v_indices, # these are train indices
+                                           v_indices=self.v_indices, # these are train indices. (When using GCMC indices)
                                            input_dim=self.hidden[1],
                                            num_users=self.num_users,
                                            num_items=self.num_items,
@@ -325,7 +348,7 @@ class RecommenderGAE(Model):
 
 class RecommenderSideInfoGAE(Model):
     def __init__(self,  placeholders, input_dim, feat_hidden_dim, num_classes, num_support,
-                 learning_rate, num_basis_functions, hidden, num_users, num_items, accum,
+                 learning_rate, num_basis_functions, hidden, num_users, num_items, accum, num_layers,
                  num_side_features, self_connections=False, **kwargs):
         super(RecommenderSideInfoGAE, self).__init__(**kwargs)
 
@@ -365,6 +388,7 @@ class RecommenderSideInfoGAE(Model):
         self.num_items = num_items
         self.accum = accum
         self.learning_rate = tf.Variable(learning_rate)
+        self.num_layers = num_layers
 
         # standard settings: beta1=0.9, beta2=0.999, epsilon=1.e-8
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate, beta1=0.9, beta2=0.999, epsilon=1.e-8)
@@ -410,7 +434,7 @@ class RecommenderSideInfoGAE(Model):
                                                  dropout=self.dropout,
                                                  logging=self.logging,
                                                  share_user_item_weights=True,
-                                                 self_connections=self.self_connections))
+                                                 self_connections=False))
 
         elif self.accum == 'stack':
             self.layers.append(StackGCN(input_dim=self.input_dim,
@@ -425,7 +449,19 @@ class RecommenderSideInfoGAE(Model):
                                         dropout=self.dropout,
                                         logging=self.logging,
                                         share_user_item_weights=True))
-
+            for i in range(self.num_layers - 1):
+                self.layers.append(StackGCN(input_dim=self.hidden[0],
+                                        output_dim=self.hidden[0],
+                                        support=self.support,
+                                        support_t=self.support_t,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=False,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
         elif self.accum == 'stackRGGCN':
             self.layers.append(StackRGGCN(input_dim=self.input_dim,
                                         output_dim=self.hidden[0],
@@ -439,12 +475,25 @@ class RecommenderSideInfoGAE(Model):
                                         dropout=self.dropout,
                                         logging=self.logging,
                                         share_user_item_weights=True))
-
-        elif self.accum == 'sumRGGCN':
-            self.layers.append(SumRGGCN(input_dim=self.input_dim,
+            for i in range(self.num_layers - 1):
+                self.layers.append(StackRGGCN(input_dim=self.hidden[0],
                                         output_dim=self.hidden[0],
-                                        E_start=self.E_start,
-                                        E_end=self.E_end,
+                                        E_start_list=self.E_start_list,
+                                        E_end_list=self.E_end_list,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=False,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+
+        elif self.accum == 'stackSimple':
+            self.layers.append(StackSimple(input_dim=self.input_dim,
+                                        output_dim=self.hidden[0],
+                                        E_start_list=self.E_start_list,
+                                        E_end_list=self.E_end_list,
                                         num_support=self.num_support,
                                         u_features_nonzero=self.u_features_nonzero,
                                         v_features_nonzero=self.v_features_nonzero,
@@ -453,9 +502,84 @@ class RecommenderSideInfoGAE(Model):
                                         dropout=self.dropout,
                                         logging=self.logging,
                                         share_user_item_weights=True))
+            for i in range(self.num_layers - 1):
+                self.layers.append(StackSimple(input_dim=self.hidden[0],
+                                        output_dim=self.hidden[0],
+                                        E_start_list=self.E_start_list,
+                                        E_end_list=self.E_end_list,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=False,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+
+
+        elif self.accum == 'sumRGGCN':
+            self.layers.append(OrdinalRGGCN(input_dim=self.input_dim,
+                                        output_dim=self.hidden[0],
+                                        E_start_list=self.E_start_list,
+                                        E_end_list=self.E_end_list,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=True,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+            for i in range(self.num_layers - 1):
+                self.layers.append(OrdinalRGGCN(input_dim=self.hidden[0],
+                                        output_dim=self.hidden[0],
+                                        E_start_list=self.E_start_list,
+                                        E_end_list=self.E_end_list,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=False,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+
+        elif self.accum == 'simple':
+            self.layers.append(Simple(input_dim=self.input_dim,
+                                        output_dim=self.hidden[0],
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=True,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+            for i in range(self.num_layers - 1):
+                self.layers.append(Simple(input_dim=self.hidden[0],
+                                        output_dim=self.hidden[0],
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=False,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
 
         elif self.accum == 'stackGCNGate':
             self.layers.append(StackGCNGate(input_dim=self.input_dim,
+                                        output_dim=self.hidden[0],
+                                        support=self.support,
+                                        support_t=self.support_t,
+                                        num_support=self.num_support,
+                                        u_features_nonzero=self.u_features_nonzero,
+                                        v_features_nonzero=self.v_features_nonzero,
+                                        sparse_inputs=True,
+                                        act=tf.nn.relu,
+                                        dropout=self.dropout,
+                                        logging=self.logging,
+                                        share_user_item_weights=True))
+            for i in range(self.num_layers - 1):
+                self.layers.append(StackGCNGate(input_dim=self.hidden[0],
                                         output_dim=self.hidden[0],
                                         support=self.support,
                                         support_t=self.support_t,
@@ -499,7 +623,7 @@ class RecommenderSideInfoGAE(Model):
                                            logging=self.logging,
                                            diagonal=False))
 
-    def build(self):
+    def build(self): # overrides the parent Model class's build method. Edited to accommodate multiple GCN layers.
         """ Wrapper for _build() """
         with tf.variable_scope(self.name):
             self._build()
@@ -507,15 +631,17 @@ class RecommenderSideInfoGAE(Model):
         # Build split sequential layer model
 
         # gcn layer
-        layer = self.layers[0]
-        gcn_hidden = layer(self.inputs)
+        self.activations.append(self.inputs)
+        for layer in self.layers[:-3]:
+            gcn_hidden = layer(self.activations[-1])
+            self.activations.append(gcn_hidden)
 
         # dense layer for features
-        layer = self.layers[1]
+        layer = self.layers[-3]
         feat_hidden = layer([self.u_features_side, self.v_features_side])
 
         # concat dense layer
-        layer = self.layers[2]
+        layer = self.layers[-2] # layer of transformed features and transformed graph info concatenated.
 
         gcn_u = gcn_hidden[0]
         gcn_v = gcn_hidden[1]
@@ -526,20 +652,16 @@ class RecommenderSideInfoGAE(Model):
         print('feat_u: {}'.format(feat_u))
         print('gcn_v: {}'.format(gcn_v))  # (3000, 500)
         print('feat_v: {}'.format(feat_v))  # (?, 64)
-        input_u = tf.concat(values=[gcn_u, feat_u], axis=1)  # BREAKING HERE!
+        input_u = tf.concat(values=[gcn_u, feat_u], axis=1)
         input_v = tf.concat(values=[gcn_v, feat_v], axis=1)
 
         concat_hidden = layer([input_u, input_v])
 
         self.activations.append(concat_hidden)
 
-        # Build sequential layer model
-        for layer in self.layers[3::]:
-            hidden = layer(self.activations[-1])
-            self.activations.append(hidden)
-        self.outputs = self.activations[-1]
-
-        self.outputs = self.activations[-1]
+        outputs = self.layers[-1](concat_hidden) # last layer, the bilinear mixture layer.
+        self.activations.append(outputs)
+        self.outputs = outputs
 
         # Store model variables for easy access
         variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)

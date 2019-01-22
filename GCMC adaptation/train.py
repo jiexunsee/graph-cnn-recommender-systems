@@ -307,14 +307,24 @@ print('train_support_shape: {}'.format(train_support.shape)) # if GCMC_INDICES, 
 
 # features as side info
 if FEATURES:
-	test_u_features_side = u_features_side[np.array(test_u)]
-	test_v_features_side = v_features_side[np.array(test_v)]
+	if GCMC_INDICES:
+		test_u_features_side = u_features_side[np.array(test_u)]
+		test_v_features_side = v_features_side[np.array(test_v)]
 
-	val_u_features_side = u_features_side[np.array(val_u)]
-	val_v_features_side = v_features_side[np.array(val_v)]
+		val_u_features_side = u_features_side[np.array(val_u)]
+		val_v_features_side = v_features_side[np.array(val_v)]
 
-	train_u_features_side = u_features_side[np.array(train_u)]
-	train_v_features_side = v_features_side[np.array(train_v)]
+		train_u_features_side = u_features_side[np.array(train_u)]
+		train_v_features_side = v_features_side[np.array(train_v)]
+	else:
+		test_u_features_side = u_features_side
+		test_v_features_side = v_features_side
+
+		val_u_features_side = u_features_side
+		val_v_features_side = v_features_side
+
+		train_u_features_side = u_features_side
+		train_v_features_side = v_features_side
 
 else:
 	test_u_features_side = None
@@ -382,6 +392,7 @@ if FEATURES:
 								   accum=ACCUM,
 								   learning_rate=LR,
 								   num_side_features=num_side_features,
+								   num_layers=NUM_LAYERS,
 								   logging=True)
 else:
 	model = RecommenderGAE(placeholders,

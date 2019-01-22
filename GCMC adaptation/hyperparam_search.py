@@ -23,13 +23,16 @@ NUM_LAYERS = [1, 2, 3]
 DATASET = 'flixster'
 TESTING = False
 VERBOSE = False
+FEATURES = True
+ACCUM = 'stackRGGCN'
 
 for combo in product(NB_EPOCH, DO, HIDDEN, NUM_LAYERS):
 	save_name = '-'.join(['{}_{}'.format(c, p) for p, c in zip(params_to_optimise, combo)])
 	all_train_rmses, all_val_rmses, all_train_losses, all_val_losses, all_rmse = [], [], [], [], []
 	for i in range(iterations):
 		print('runnning experiment for {}'.format(save_name))
-		params_dict = {'DATASET': DATASET, 'NB_EPOCH': combo[0], 'DO': combo[1], 'HIDDEN': combo[2], 'NUM_LAYERS': combo[3], 'VERBOSE': VERBOSE}
+		params_dict = {'DATASET': DATASET, 'FEATURES': FEATURES, 'NB_EPOCH': combo[0], 'DO': combo[1], 'HIDDEN': combo[2], 'NUM_LAYERS': combo[3],
+						'VERBOSE': VERBOSE, 'ACCUM': ACCUM}
 		train_rmses, val_rmses, train_losses, val_losses, rmse = run(**params_dict)
 		all_train_rmses.append(train_rmses)
 		all_val_rmses.append(val_rmses)
