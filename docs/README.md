@@ -1,3 +1,8 @@
+## 8 Feb 2019
+**To do:**
+* Produce experiment results with dropout applied on edges too. Previously dropout only applied on the nodes.
+* Find another domain (e.g. biomedical) to apply this framework of graph autoencoder matrix factorisation and completion.
+
 ## 22 Jan 2019
 * Updated model that includes side features, such that it can now use multiple graph convolution layers.
 * Working on interim report.
