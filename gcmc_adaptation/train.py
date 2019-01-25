@@ -101,6 +101,8 @@ ap.set_defaults(testing=False)
 
 ap.add_argument('-gi', '--use_gcmc_indices', action='store_true', help='Option to use original GCMC way of producing user/item indices')
 
+ap.add_argument('-de', '--dropout_edges', action='store_true', help='Option to do dropout on edges too')
+
 
 args = vars(ap.parse_args())
 
@@ -126,6 +128,7 @@ TESTING = args['testing']
 ACCUM = args['accumulation']
 NUM_LAYERS = args['num_layers']
 GCMC_INDICES = args['use_gcmc_indices']
+DROPOUT_EDGES = args['dropout_edges']
 
 SELFCONNECTIONS = False
 SPLITFROMFILE = True
@@ -368,10 +371,13 @@ E_start, E_end = get_edges_matrices(adj_train)
 
 placeholders['E_start_list'] = []
 placeholders['E_end_list'] = []
+placeholders['E_start_nonzero_list'] = []
+placeholders['E_end_nonzero_list'] = []
 for i in range(num_support):
-	placeholders['E_start_list'].append(tf.sparse_placeholder(tf.float32, shape=(None, None)))
+	placeholders['E_start_list'].append(tf.sparse_placeholder(tf.float32, shape=(None, None), name='CULPRIT'))
 	placeholders['E_end_list'].append(tf.sparse_placeholder(tf.float32, shape=(None, None)))
-
+	placeholders['E_start_nonzero_list'].append(tf.placeholder(tf.int32, shape=()))
+	placeholders['E_end_nonzero_list'].append(tf.placeholder(tf.int32, shape=()))
 print('shape of E_end for first rating type: {}'.format(E_end[0].toarray().shape))
 
 ##################################################################################################################
@@ -393,6 +399,7 @@ if FEATURES:
 								   learning_rate=LR,
 								   num_side_features=num_side_features,
 								   num_layers=NUM_LAYERS,
+								   dropout_edges=DROPOUT_EDGES,
 								   logging=True)
 else:
 	model = RecommenderGAE(placeholders,
@@ -407,6 +414,7 @@ else:
 						   accum=ACCUM,
 						   learning_rate=LR,
 						   num_layers=NUM_LAYERS,
+						   dropout_edges=DROPOUT_EDGES,
 						   logging=True)
 
 # Convert sparse placeholders to tuples to construct feed_dict. sparse placeholders expect tuple of (indices, values, shape)
@@ -430,30 +438,37 @@ v_features_nonzero = v_features[1].shape[0]
 # setting E_start to be the same for train, val, and test. E_start already only contains train edges (from preprocessing script)
 train_E_start = []
 train_E_end = []
+E_start_nonzero_list = []
+E_end_nonzero_list = []
 print('LENGTH OF E_START: {}'.format(len(E_start)))
 print('NUM_SUPPORT: {}'.format(num_support))
 for i in range(num_support):
-	train_E_start.append(sparse_to_tuple(E_start[i]))
-	train_E_end.append(sparse_to_tuple(E_end[i]))
+	E_start_i = sparse_to_tuple(E_start[i])
+	E_end_i = sparse_to_tuple(E_end[i])
+	train_E_start.append(E_start_i)
+	train_E_end.append(E_end_i)
+	E_start_nonzero_list.append(E_start_i[1].shape[0])
+	E_end_nonzero_list.append(E_end_i[1].shape[0])
 val_E_start = test_E_start = train_E_start
 val_E_end = test_E_end = train_E_end
+
 
 # Feed_dicts for validation and test set stay constant over different update steps
 train_feed_dict = construct_feed_dict(placeholders, u_features, v_features, u_features_nonzero,
 									  v_features_nonzero, train_support, train_support_t,
 									  train_labels, train_u_indices, train_v_indices, class_values, DO,
-									  train_u_features_side, train_v_features_side, train_E_start, train_E_end)
+									  train_u_features_side, train_v_features_side, train_E_start, train_E_end, E_start_nonzero_list, E_end_nonzero_list)
 
 # No dropout for validation and test runs. DO = dropout. input for val and test is same u_features and v_features.
 val_feed_dict = construct_feed_dict(placeholders, u_features, v_features, u_features_nonzero,
 									v_features_nonzero, val_support, val_support_t,
 									val_labels, val_u_indices, val_v_indices, class_values, 0.,
-									val_u_features_side, val_v_features_side, val_E_start, val_E_end)
+									val_u_features_side, val_v_features_side, val_E_start, val_E_end, E_start_nonzero_list, E_end_nonzero_list)
 
 test_feed_dict = construct_feed_dict(placeholders, u_features, v_features, u_features_nonzero,
 									 v_features_nonzero, test_support, test_support_t,
 									 test_labels, test_u_indices, test_v_indices, class_values, 0.,
-									 test_u_features_side, test_v_features_side, test_E_start, test_E_end)
+									 test_u_features_side, test_v_features_side, test_E_start, test_E_end, E_start_nonzero_list, E_end_nonzero_list)
 
 
 # Collect all variables to be logged into summary

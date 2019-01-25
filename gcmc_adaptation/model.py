@@ -91,7 +91,7 @@ class Model(object):
 
 class RecommenderGAE(Model):
     def __init__(self, placeholders, input_dim, num_classes, num_support,
-                 learning_rate, num_basis_functions, hidden, num_users, num_items, accum, num_layers,
+                 learning_rate, num_basis_functions, hidden, num_users, num_items, accum, num_layers, dropout_edges,
                  self_connections=False, **kwargs):
         super(RecommenderGAE, self).__init__(**kwargs)
 
@@ -107,6 +107,8 @@ class RecommenderGAE(Model):
         self.class_values = placeholders['class_values']
         self.E_start_list = placeholders['E_start_list']
         self.E_end_list = placeholders['E_end_list']
+        self.E_start_nonzero_list = placeholders['E_start_nonzero_list']
+        self.E_end_nonzero_list = placeholders['E_end_nonzero_list']
 
         self.hidden = hidden
         self.num_basis_functions = num_basis_functions
@@ -119,6 +121,7 @@ class RecommenderGAE(Model):
         self.accum = accum
         self.learning_rate = tf.Variable(learning_rate)
         self.num_layers = num_layers
+        self.dropout_edges = dropout_edges
 
         # standard settings: beta1=0.9, beta2=0.999, epsilon=1.e-8
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate, beta1=0.9, beta2=0.999, epsilon=1.e-8)
@@ -204,6 +207,9 @@ class RecommenderGAE(Model):
                                         act=tf.nn.relu,
                                         dropout=self.dropout,
                                         logging=self.logging,
+                                        dropout_edges=self.dropout_edges,
+                                        E_start_nonzero_list=self.E_start_nonzero_list,
+                                        E_end_nonzero_list=self.E_end_nonzero_list,
                                         share_user_item_weights=True))
             for i in range(self.num_layers - 1):
                 self.layers.append(StackRGGCN(input_dim=self.hidden[0],
@@ -217,6 +223,9 @@ class RecommenderGAE(Model):
                                         act=tf.nn.relu,
                                         dropout=self.dropout,
                                         logging=self.logging,
+                                        dropout_edges=False,
+                                        E_start_nonzero_list=self.E_start_nonzero_list,
+                                        E_end_nonzero_list=self.E_end_nonzero_list,
                                         share_user_item_weights=True))
 
         elif self.accum == 'stackSimple':
@@ -349,7 +358,7 @@ class RecommenderGAE(Model):
 class RecommenderSideInfoGAE(Model):
     def __init__(self,  placeholders, input_dim, feat_hidden_dim, num_classes, num_support,
                  learning_rate, num_basis_functions, hidden, num_users, num_items, accum, num_layers,
-                 num_side_features, self_connections=False, **kwargs):
+                 num_side_features, dropout_edges, self_connections=False, **kwargs):
         super(RecommenderSideInfoGAE, self).__init__(**kwargs)
 
         self.inputs = (placeholders['u_features'], placeholders['v_features'])
@@ -367,6 +376,8 @@ class RecommenderSideInfoGAE(Model):
         self.class_values = placeholders['class_values']
         self.E_start_list = placeholders['E_start_list']
         self.E_end_list = placeholders['E_end_list']
+        self.E_start_nonzero_list = placeholders['E_start_nonzero_list']
+        self.E_end_nonzero_list = placeholders['E_end_nonzero_list']
 
         self.num_side_features = num_side_features
         self.feat_hidden_dim = feat_hidden_dim
@@ -389,6 +400,7 @@ class RecommenderSideInfoGAE(Model):
         self.accum = accum
         self.learning_rate = tf.Variable(learning_rate)
         self.num_layers = num_layers
+        self.dropout_edges = dropout_edges
 
         # standard settings: beta1=0.9, beta2=0.999, epsilon=1.e-8
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate, beta1=0.9, beta2=0.999, epsilon=1.e-8)
@@ -474,6 +486,9 @@ class RecommenderSideInfoGAE(Model):
                                         act=tf.nn.relu,
                                         dropout=self.dropout,
                                         logging=self.logging,
+                                        dropout_edges=self.dropout_edges,
+                                        E_start_nonzero_list=self.E_start_nonzero_list,
+                                        E_end_nonzero_list=self.E_end_nonzero_list,
                                         share_user_item_weights=True))
             for i in range(self.num_layers - 1):
                 self.layers.append(StackRGGCN(input_dim=self.hidden[0],
@@ -487,6 +502,9 @@ class RecommenderSideInfoGAE(Model):
                                         act=tf.nn.relu,
                                         dropout=self.dropout,
                                         logging=self.logging,
+                                        dropout_edges=False,
+                                        E_start_nonzero_list=self.E_start_nonzero_list,
+                                        E_end_nonzero_list=self.E_end_nonzero_list,
                                         share_user_item_weights=True))
 
         elif self.accum == 'stackSimple':

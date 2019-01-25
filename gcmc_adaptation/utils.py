@@ -4,7 +4,7 @@ from __future__ import print_function
 
 def construct_feed_dict(placeholders, u_features, v_features, u_features_nonzero, v_features_nonzero,
                         support, support_t, labels, u_indices, v_indices, class_values,
-                        dropout, u_features_side=None, v_features_side=None, E_start=None, E_end=None):
+                        dropout, u_features_side=None, v_features_side=None, E_start=None, E_end=None, E_start_nonzero=None, E_end_nonzero=None):
     """
     Function that creates feed dictionary when running tensorflow sessions.
     """
@@ -32,6 +32,8 @@ def construct_feed_dict(placeholders, u_features, v_features, u_features_nonzero
         for i in range(len(E_start)):
             feed_dict.update({placeholders['E_start_list'][i]: E_start[i]})
             feed_dict.update({placeholders['E_end_list'][i]: E_end[i]})
+            feed_dict.update({placeholders['E_start_nonzero_list'][i]: E_start_nonzero[i]})
+            feed_dict.update({placeholders['E_end_nonzero_list'][i]: E_end_nonzero[i]})
         # feed_dict.update({placeholders['E_start']: E_start})
         # feed_dict.update({placeholders['E_end']: E_end})
 

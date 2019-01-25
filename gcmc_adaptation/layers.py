@@ -282,7 +282,7 @@ class StackRGGCN(Layer):
     """Residual gated graph convolutional layer (Bresson). adapted from stackGC layer """
     def __init__(self, input_dim, output_dim, E_start_list, E_end_list, num_support, u_features_nonzero=None,
                  v_features_nonzero=None, sparse_inputs=False, dropout=0.,
-                 act=tf.nn.relu, share_user_item_weights=True, **kwargs):
+                 act=tf.nn.relu, share_user_item_weights=True, dropout_edges=False, E_start_nonzero_list=None, E_end_nonzero_list=None, **kwargs):
         super(StackRGGCN, self).__init__(**kwargs)
 
         assert output_dim % num_support == 0, 'output_dim must be multiple of num_support for stackGC layer'
@@ -307,6 +307,9 @@ class StackRGGCN(Layer):
 
         self.E_start = E_start_list
         self.E_end = E_end_list
+        self.E_start_nonzero_list = E_start_nonzero_list
+        self.E_end_nonzero_list = E_end_nonzero_list
+        self.dropout_edges = dropout_edges
 
         if self.logging:
             self._log_vars()
@@ -338,6 +341,11 @@ class StackRGGCN(Layer):
 
         outputs = []
         for i in range(len(self.E_start)):
+            # DROPOUT FOR EDGES
+            if self.dropout_edges:
+                self.E_start[i] = dropout_sparse(self.E_start[i], 1-self.dropout, self.E_start_nonzero_list[i])
+                self.E_end[i] = dropout_sparse(self.E_end[i], 1-self.dropout, self.E_end_nonzero_list[i])
+                
             # E_start, E_end : E x V
             x = original_x
             # conv1

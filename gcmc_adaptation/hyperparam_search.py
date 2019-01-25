@@ -20,7 +20,7 @@ DO = [0.5, 0.7]
 HIDDEN = [[75, 50], [150, 75], [200, 100]]
 NUM_LAYERS = [1, 2, 3]
 
-DATASET = 'douban'
+DATASET = 'flixster'
 TESTING = False
 VERBOSE = False
 FEATURES = True
