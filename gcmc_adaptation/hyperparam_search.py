@@ -25,6 +25,7 @@ TESTING = False
 VERBOSE = False
 FEATURES = True
 ACCUM = 'stackRGGCN'
+DROPOUT_EDGES = True
 
 for combo in product(NB_EPOCH, DO, HIDDEN, NUM_LAYERS):
 	save_name = '-'.join(['{}_{}'.format(c, p) for p, c in zip(params_to_optimise, combo)])
@@ -34,7 +35,7 @@ for combo in product(NB_EPOCH, DO, HIDDEN, NUM_LAYERS):
 	for i in range(iterations):
 		print('runnning experiment for {}'.format(save_name))
 		params_dict = {'DATASET': DATASET, 'FEATURES': FEATURES, 'NB_EPOCH': combo[0], 'DO': combo[1], 'HIDDEN': combo[2], 'NUM_LAYERS': combo[3],
-						'VERBOSE': VERBOSE, 'ACCUM': ACCUM}
+						'VERBOSE': VERBOSE, 'ACCUM': ACCUM, 'DROPOUT_EDGES': DROPOUT_EDGES}
 		train_rmses, val_rmses, train_losses, val_losses, rmse = run(**params_dict)
 		all_train_rmses.append(train_rmses)
 		all_val_rmses.append(val_rmses)
