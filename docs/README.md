@@ -2,7 +2,7 @@
 **To do:**
 * Find another domain (e.g. biomedical) to apply this framework of graph autoencoder matrix factorisation and completion. Possible domains:
    * Predict friendships in social media graphs. However, unable to find a benchmark to compare with.
-   * Predict disease classes in incomplete datasets, as in [this paper](https://arxiv.org/pdf/1803.11550.pdf)
+   * Predict disease classes in incomplete datasets, as in [this paper](https://arxiv.org/pdf/1803.11550.pdf).
 * Add normalisation on edges.
 
 ## 22 Jan 2019
