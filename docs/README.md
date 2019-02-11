@@ -1,7 +1,7 @@
-## 8 Feb 2019
+## 15 Feb 2019
 **To do:**
-* Produce experiment results with dropout applied on edges too. Previously dropout only applied on the nodes.
 * Find another domain (e.g. biomedical) to apply this framework of graph autoencoder matrix factorisation and completion.
+   * Possible domain: predict friendships in social media graphs. However, unable to find a benchmark to compare with.
 
 ## 22 Jan 2019
 * Updated model that includes side features, such that it can now use multiple graph convolution layers.
