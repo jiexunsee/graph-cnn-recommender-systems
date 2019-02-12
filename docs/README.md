@@ -1,7 +1,7 @@
 ## 15 Feb 2019
 **To do:**
 * Find another domain (e.g. biomedical) to apply this framework of graph autoencoder matrix factorisation and completion. Possible domains:
-   * Predict friendships in social media graphs. However, unable to find a benchmark to compare with.
+   * Predict friendships in social media graphs. Currently found 2-3 research papers to compare results with.
    * Predict disease classes in incomplete datasets, as in [this paper](https://arxiv.org/pdf/1803.11550.pdf). The ADNI dataset consists of biomarkers for patients and has incomplete features. The aim is to predict the conversion of mild cognitive impairment to Alzheimer's Disease.
 * Add normalisation on edges.
 
