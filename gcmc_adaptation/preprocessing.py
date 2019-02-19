@@ -423,7 +423,7 @@ def load_facebook_data(adj, observed_fraction, edges_fraction, val_fraction=0.2)
     return adj_train, train_labels, u_train_idx, v_train_idx, \
         val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values
 
-def get_edges_matrices(adj, separate=True):
+def get_edges_matrices(adj, normalise_edges, separate=True):
     # check what range of values adj has
     adj = adj.toarray()  # adj.shape is 3000x3000 because it's users x items. but want it to be (users+items) x (users+items) for full adj matrix.
     n_users = adj.shape[0]
@@ -461,9 +461,9 @@ def get_edges_matrices(adj, separate=True):
             # edge_to_starting_vertex = sp.coo_matrix(e_start)
             # edge_to_ending_vertex = sp.coo_matrix(e_end)
             ###
-
-            edge_to_starting_vertex = normalize(edge_to_starting_vertex, norm='l1', axis=0)
-            edge_to_ending_vertex = normalize(edge_to_ending_vertex, norm='l1', axis=0)
+            if normalise_edges:
+                edge_to_starting_vertex = normalize(edge_to_starting_vertex, norm='l1', axis=0)
+                edge_to_ending_vertex = normalize(edge_to_ending_vertex, norm='l1', axis=0)
             E_start.append(edge_to_starting_vertex)
             E_end.append(edge_to_ending_vertex)
 
@@ -483,8 +483,9 @@ def get_edges_matrices(adj, separate=True):
                                                shape=(nb_edges, nb_vertices) )
         edge_to_ending_vertex = sp.coo_matrix( ( np.ones(nb_edges) ,(np.arange(nb_edges), W_coo.col) ),
                                                shape=(nb_edges, nb_vertices) )
-        edge_to_starting_vertex = normalize(edge_to_starting_vertex, norm='l1', axis=0)
-        edge_to_ending_vertex = normalize(edge_to_ending_vertex, norm='l1', axis=0)
+        if normalise_edges:
+            edge_to_starting_vertex = normalize(edge_to_starting_vertex, norm='l1', axis=0)
+            edge_to_ending_vertex = normalize(edge_to_ending_vertex, norm='l1', axis=0)
         return edge_to_starting_vertex, edge_to_ending_vertex
 
 def load_official_trainvaltest_split(dataset, testing=False):

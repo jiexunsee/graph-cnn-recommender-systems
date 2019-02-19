@@ -103,6 +103,8 @@ ap.add_argument('-gi', '--use_gcmc_indices', action='store_true', help='Option t
 
 ap.add_argument('-de', '--dropout_edges', action='store_true', help='Option to do dropout on edges too')
 
+ap.add_argument('-ne', '--normalise_edges', action='store_true', help='Option to normalise edges')
+
 ap.add_argument("-of", "--observed_fraction", type=float, default=0.8,
 				help="Observed fraction of users, for facebook dataset")
 
@@ -132,6 +134,7 @@ ACCUM = args['accumulation']
 NUM_LAYERS = args['num_layers']
 GCMC_INDICES = args['use_gcmc_indices']
 DROPOUT_EDGES = args['dropout_edges']
+normalise_edges = args['normalise_edges']
 observed_fraction = args['observed_fraction']
 
 SELFCONNECTIONS = False
@@ -378,7 +381,7 @@ placeholders = {
 }
 
 ##################################################################################################################
-E_start, E_end = get_edges_matrices(adj_train)
+E_start, E_end = get_edges_matrices(adj_train, normalise_edges)
 # E_start = sp.hstack(E_start, format='csr')  # confirm if vstack is correct and not hstack
 # E_end = sp.hstack(E_end, format='csr')
 
