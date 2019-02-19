@@ -8,6 +8,7 @@ import pickle as pkl
 import os
 import h5py
 import pandas as pd
+import itertools
 
 
 from data_utils import load_data, map_data, download_dataset
@@ -332,6 +333,95 @@ def load_data_monti(dataset, testing=False):
     return u_features, v_features, rating_mx_train, train_labels, u_train_idx, v_train_idx, \
         val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values
 
+def load_facebook_data(adj, observed_fraction, edges_fraction, val_fraction=0.2):
+    print('loading facebook data...')
+    n_users = adj.shape[0]
+    row, col = np.where(adj == 2)
+    pairs = [(u, v) for u, v in zip(row, col)]
+    print('number of pairs: {}'.format(len(pairs)))
+    n_observed = int(n_users*observed_fraction)
+
+    # get list of observed users and list of unobserved users
+    rand_idx = list(range(n_users))
+    np.random.seed(42)
+    np.random.shuffle(rand_idx)
+    observed_users = rand_idx[:n_observed]
+    unobserved_users = rand_idx[n_observed:]
+
+    # get node pairs which are connected ('2'), among observed indices
+    adj_observed = np.copy(adj)
+    adj_observed[unobserved_users, :] = 0
+    adj_observed[:, unobserved_users] = 0
+    row, col = np.where(adj_observed == 2)
+    observed_pairs = [(u, v) for u, v in zip(row, col)]
+
+    adj_unobserved = np.copy(adj)
+    adj_unobserved[observed_users, :] = 0
+    # adj_unobserved[:, observed_users] = 0
+    row, col = np.where(adj_unobserved == 2)
+    unobserved_pairs = [(u, v) for u, v in zip(row, col)] # these will be test edges
+
+    # get fraction of connected edges among observed nodes, for train and val
+    n_observed_pairs = len(observed_pairs)
+    rand_idx = list(range(n_observed_pairs))
+    print('number of observed pairs: {}'.format(n_observed_pairs))
+    print('number of unobserved pairs: {}'.format(len(unobserved_pairs)))
+    np.random.seed(43)
+    np.random.shuffle(rand_idx)
+    n_val_pairs = int(n_observed_pairs*val_fraction)
+    n_train_pairs = n_observed_pairs - n_val_pairs
+    train_pairs_indices = rand_idx[:n_train_pairs]
+    val_pairs_indices = rand_idx[n_train_pairs:]
+    train_pairs = [observed_pairs[i] for i in train_pairs_indices] # pairs refers to nodes that are connected
+    val_pairs = [observed_pairs[i] for i in val_pairs_indices]
+    print('obtained pairs... {} train, {} val'.format(len(train_pairs), len(val_pairs)))
+
+    # get train and val unconnected edges
+    row, col = np.where(adj_observed == 1)
+    unconnected_edges = [(u, v) for u, v in zip(row, col)]
+    n_train_val_edges = len(unconnected_edges)
+    rand_idx = list(range(n_train_val_edges))
+    np.random.seed(46)
+    np.random.shuffle(rand_idx)
+    n_train_edges = int(n_train_val_edges*edges_fraction*(1-val_fraction))
+    n_val_edges = int(n_train_val_edges*edges_fraction*val_fraction)
+    train_edges_indices = rand_idx[:n_train_edges]
+    val_edges_indices = rand_idx[n_train_edges:n_train_edges+n_val_edges]
+    train_edges = [unconnected_edges[i] for i in train_edges_indices]
+    val_edges = [unconnected_edges[i] for i in val_edges_indices]
+    print('obtained edges... {} train, {} val'.format(len(train_edges), len(val_edges)))
+
+    # merge with connected train and val edges
+    all_train_edges = train_pairs + train_edges
+    all_val_edges = val_pairs + val_edges
+    train_pairs_labels = np.ones(len(train_pairs))
+    train_edges_labels = np.zeros(len(train_edges))
+    val_pairs_labels = np.ones(len(val_pairs))
+    val_edges_labels = np.zeros(len(val_edges))
+    train_labels = np.concatenate([train_pairs_labels, train_edges_labels])
+    val_labels = np.concatenate([val_pairs_labels, val_edges_labels])
+    print('merged edges... {} train, {} val'.format(len(train_labels), len(val_labels)))
+
+    # populate adj_train
+    adj_train = np.zeros((n_users, n_users))
+    for i, edge in enumerate(all_train_edges):
+        u = edge[0]
+        v = edge[1]
+        adj_train[u, v] = train_labels[i] + 1
+    adj_train = sp.csr_matrix(adj_train)
+
+    # variables to be returned. labels are 0, 1. even though class_values is [1, 2].
+    u_train_idx = [u for u, v in all_train_edges]
+    v_train_idx = [v for u, v in all_train_edges]
+    u_val_idx = [u for u, v in all_val_edges]
+    v_val_idx = [v for u, v in all_val_edges]
+    u_test_idx = [u for u, v in unobserved_pairs]
+    v_test_idx = [v for u, v in unobserved_pairs]
+    test_labels = np.ones(len(u_test_idx))
+    class_values = np.array([1, 2])
+
+    return adj_train, train_labels, u_train_idx, v_train_idx, \
+        val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values
 
 def get_edges_matrices(adj, separate=True):
     # check what range of values adj has

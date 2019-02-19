@@ -17,7 +17,7 @@ import json
 
 from preprocessing import create_trainvaltest_split, \
 	sparse_to_tuple, preprocess_user_item_features, globally_normalize_bipartite_adjacency, \
-	load_data_monti, load_official_trainvaltest_split, normalize_features, get_edges_matrices
+	load_data_monti, load_official_trainvaltest_split, normalize_features, get_edges_matrices, load_facebook_data
 from model import RecommenderGAE, RecommenderSideInfoGAE
 from utils import construct_feed_dict
 
@@ -30,7 +30,7 @@ tf.set_random_seed(seed)
 # Settings
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", type=str, default="ml_1m",
-				choices=['ml_100k', 'ml_1m', 'ml_10m', 'douban', 'yahoo_music', 'flixster'],
+				choices=['ml_100k', 'ml_1m', 'ml_10m', 'douban', 'yahoo_music', 'flixster', 'facebook'],
 				help="Dataset string.")
 
 ap.add_argument("-lr", "--learning_rate", type=float, default=0.01,
@@ -103,6 +103,9 @@ ap.add_argument('-gi', '--use_gcmc_indices', action='store_true', help='Option t
 
 ap.add_argument('-de', '--dropout_edges', action='store_true', help='Option to do dropout on edges too')
 
+ap.add_argument("-of", "--observed_fraction", type=float, default=0.8,
+				help="Observed fraction of users, for facebook dataset")
+
 
 args = vars(ap.parse_args())
 
@@ -129,6 +132,7 @@ ACCUM = args['accumulation']
 NUM_LAYERS = args['num_layers']
 GCMC_INDICES = args['use_gcmc_indices']
 DROPOUT_EDGES = args['dropout_edges']
+observed_fraction = args['observed_fraction']
 
 SELFCONNECTIONS = False
 SPLITFROMFILE = True
@@ -150,6 +154,8 @@ elif DATASET == 'yahoo_music':
 		print('Consider using "--accum stack" as an option for this dataset.')
 		print('If you want to proceed with this option anyway, uncomment this.\n')
 		sys.exit(1)
+elif DATASET == 'facebook':
+	NUMCLASSES = 2
 
 # Splitting dataset in training, validation and test set
 
@@ -174,6 +180,16 @@ elif DATASET == 'ml_100k':
 	u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices, \
 		val_labels, val_u_indices, val_v_indices, test_labels, \
 		test_u_indices, test_v_indices, class_values = load_official_trainvaltest_split(DATASET, TESTING)
+
+elif DATASET == 'facebook':
+	adj = np.load('data/facebook/adjacency2.npy')
+	u_features = np.load('data/facebook/user_features.npy')
+	v_features = np.load('data/facebook/user_features.npy')
+	edges_fraction = 0.01 # this gives around as many non-edges as connected edges.
+	adj_train, train_labels, train_u_indices, train_v_indices, \
+		val_labels, val_u_indices, val_v_indices, test_labels, \
+		test_u_indices, test_v_indices, class_values = load_facebook_data(adj, observed_fraction, edges_fraction)
+
 else:
 	print("Using random dataset split ...")
 	u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices, \
