@@ -10,6 +10,7 @@ import h5py
 import pandas as pd
 import itertools
 from sklearn.preprocessing import normalize
+from sklearn.model_selection import train_test_split
 
 from data_utils import load_data, map_data, download_dataset
 
@@ -418,6 +419,53 @@ def load_facebook_data(adj, observed_fraction, edges_fraction, val_fraction=0.2)
     u_test_idx = [u for u, v in unobserved_pairs]
     v_test_idx = [v for u, v in unobserved_pairs]
     test_labels = np.ones(len(u_test_idx))
+    class_values = np.array([1, 2])
+
+    return adj_train, train_labels, u_train_idx, v_train_idx, \
+        val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values
+
+def load_facebook_data_link_prediction(adj, edges_fraction, val_fraction=0.2, test_fraction=0.2):
+    print('loading facebook data...')
+    n_users = adj.shape[0]
+
+    row, col = np.where(adj == 2)
+    pairs = [(u, v) for u, v in zip(row, col)]
+    print('number of pairs: {}'.format(len(pairs)))
+
+    row, col = np.where(adj == 1)
+    unconnected_edges = [(u, v) for u, v in zip(row, col)]
+    rand_idx = list(range(len(unconnected_edges)))
+    np.random.seed(41)
+    np.random.shuffle(rand_idx)
+    keep_indices = rand_idx[:int(len(unconnected_edges)*edges_fraction)]
+    unconnected_edges = [unconnected_edges[i] for i in keep_indices]
+    print('number of unconected edges: {}'.format(len(unconnected_edges)))
+
+    all_edges = pairs + unconnected_edges
+    all_labels = [1]*len(pairs) + [0]*len(unconnected_edges)
+    n_edges = len(all_edges)
+
+    train_edges, dev_edges, train_labels, dev_labels = train_test_split(all_edges, all_labels, test_size=val_fraction+test_fraction, random_state=42)
+    test_val_ratio = test_fraction/(test_fraction+val_fraction)
+    val_edges, test_edges, val_labels, test_labels = train_test_split(dev_edges, dev_labels, test_size=test_val_ratio, random_state=43)
+
+    print('merged edges... {} train, {} val, {} test'.format(len(train_labels), len(val_labels), len(test_labels)))
+
+    # populate adj_train
+    adj_train = np.zeros((n_users, n_users))
+    for i, edge in enumerate(train_edges):
+        u = edge[0]
+        v = edge[1]
+        adj_train[u, v] = train_labels[i] + 1
+    adj_train = sp.csr_matrix(adj_train)
+
+    # variables to be returned. labels are 0, 1. even though class_values is [1, 2].
+    u_train_idx = [u for u, v in train_edges]
+    v_train_idx = [v for u, v in train_edges]
+    u_val_idx = [u for u, v in val_edges]
+    v_val_idx = [v for u, v in val_edges]
+    u_test_idx = [u for u, v in test_edges]
+    v_test_idx = [v for u, v in test_edges]
     class_values = np.array([1, 2])
 
     return adj_train, train_labels, u_train_idx, v_train_idx, \

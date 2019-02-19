@@ -17,7 +17,7 @@ import json
 
 from preprocessing import create_trainvaltest_split, \
 	sparse_to_tuple, preprocess_user_item_features, globally_normalize_bipartite_adjacency, \
-	load_data_monti, load_official_trainvaltest_split, normalize_features, get_edges_matrices, load_facebook_data
+	load_data_monti, load_official_trainvaltest_split, normalize_features, get_edges_matrices, load_facebook_data, load_facebook_data_link_prediction
 from model import RecommenderGAE, RecommenderSideInfoGAE
 from utils import construct_feed_dict
 
@@ -105,8 +105,10 @@ ap.add_argument('-de', '--dropout_edges', action='store_true', help='Option to d
 
 ap.add_argument('-ne', '--normalise_edges', action='store_true', help='Option to normalise edges')
 
-ap.add_argument("-of", "--observed_fraction", type=float, default=0.8,
-				help="Observed fraction of users, for facebook dataset")
+ap.add_argument("-of", "--observed_fraction", type=float, default=0.8, help="Observed fraction of users, for facebook dataset")
+
+ap.add_argument("-vf", "--val_fraction", type=float, default=0.2, help="Validation fraction, for facebook dataset")
+ap.add_argument("-tf", "--test_fraction", type=float, default=0.2, help="Test fraction, for facebook dataset")
 
 
 args = vars(ap.parse_args())
@@ -136,6 +138,8 @@ GCMC_INDICES = args['use_gcmc_indices']
 DROPOUT_EDGES = args['dropout_edges']
 normalise_edges = args['normalise_edges']
 observed_fraction = args['observed_fraction']
+val_fraction = args['val_fraction']
+test_fraction = args['test_fraction']
 
 SELFCONNECTIONS = False
 SPLITFROMFILE = True
@@ -189,9 +193,13 @@ elif DATASET == 'facebook':
 	u_features = np.load('data/facebook/user_features.npy')
 	v_features = np.load('data/facebook/user_features.npy')
 	edges_fraction = 0.01 # this gives around as many non-edges as connected edges.
+	# adj_train, train_labels, train_u_indices, train_v_indices, \
+	# 	val_labels, val_u_indices, val_v_indices, test_labels, \
+	# 	test_u_indices, test_v_indices, class_values = load_facebook_data(adj, observed_fraction, edges_fraction)
+
 	adj_train, train_labels, train_u_indices, train_v_indices, \
 		val_labels, val_u_indices, val_v_indices, test_labels, \
-		test_u_indices, test_v_indices, class_values = load_facebook_data(adj, observed_fraction, edges_fraction)
+		test_u_indices, test_v_indices, class_values = load_facebook_data_link_prediction(adj, edges_fraction, val_fraction, test_fraction)
 
 else:
 	print("Using random dataset split ...")
