@@ -9,7 +9,7 @@ import os
 import h5py
 import pandas as pd
 import itertools
-
+from sklearn.preprocessing import normalize
 
 from data_utils import load_data, map_data, download_dataset
 
@@ -440,7 +440,7 @@ def get_edges_matrices(adj, separate=True):
         nb_vertices = adj.shape[0]
         E_start = []
         E_end = []
-        for r in range(int(max(unique_ratings)) + 1): # to handle yahoo dataset where not all rating types are present in the training set
+        for r in range(int(max(unique_ratings)) + 1): # instead of len(unique_ratings), to handle yahoo dataset where not all rating types are present in the training set
             if r == 0:
                 continue
             r_adj = np.where(adj == r, adj, np.zeros_like(adj))
@@ -462,6 +462,8 @@ def get_edges_matrices(adj, separate=True):
             # edge_to_ending_vertex = sp.coo_matrix(e_end)
             ###
 
+            edge_to_starting_vertex = normalize(edge_to_starting_vertex, norm='l1', axis=0)
+            edge_to_ending_vertex = normalize(edge_to_ending_vertex, norm='l1', axis=0)
             E_start.append(edge_to_starting_vertex)
             E_end.append(edge_to_ending_vertex)
 
@@ -481,6 +483,8 @@ def get_edges_matrices(adj, separate=True):
                                                shape=(nb_edges, nb_vertices) )
         edge_to_ending_vertex = sp.coo_matrix( ( np.ones(nb_edges) ,(np.arange(nb_edges), W_coo.col) ),
                                                shape=(nb_edges, nb_vertices) )
+        edge_to_starting_vertex = normalize(edge_to_starting_vertex, norm='l1', axis=0)
+        edge_to_ending_vertex = normalize(edge_to_ending_vertex, norm='l1', axis=0)
         return edge_to_starting_vertex, edge_to_ending_vertex
 
 def load_official_trainvaltest_split(dataset, testing=False):
