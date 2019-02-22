@@ -519,8 +519,9 @@ def get_edges_matrices(adj, normalise_edges, dropout=0, separate=True):
             ###
             if normalise_edges:
                 print('normalising edges with dropout of {}'.format(dropout))
-                edge_to_starting_vertex = normalize(edge_to_starting_vertex/dropout, norm='l1', axis=0)
-                edge_to_ending_vertex = normalize(edge_to_ending_vertex/dropout, norm='l1', axis=0)
+                divisor = 1 - dropout
+                edge_to_starting_vertex = normalize(edge_to_starting_vertex/divisor, norm='l1', axis=0)
+                edge_to_ending_vertex = normalize(edge_to_ending_vertex/divisor, norm='l1', axis=0)
             E_start.append(edge_to_starting_vertex)
             E_end.append(edge_to_ending_vertex)
 
