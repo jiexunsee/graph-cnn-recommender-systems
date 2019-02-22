@@ -20,12 +20,13 @@ DO = [0.5, 0.7]
 HIDDEN = [[75, 50], [150, 75], [200, 100]]
 NUM_LAYERS = [1, 2, 3]
 
-DATASET = 'flixster'
-TESTING = False
+DATASET = 'facebook'
+TESTING = True # for facebook, testing = True just means we run it on test set. validation set still exists separately from train set.
 VERBOSE = False
 FEATURES = True
 ACCUM = 'stackRGGCN'
 DROPOUT_EDGES = True
+
 
 for combo in product(NB_EPOCH, DO, HIDDEN, NUM_LAYERS):
 	save_name = '-'.join(['{}_{}'.format(c, p) for p, c in zip(params_to_optimise, combo)])

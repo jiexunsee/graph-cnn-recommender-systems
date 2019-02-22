@@ -15,14 +15,15 @@ from tqdm import tqdm
 
 from preprocessing import create_trainvaltest_split, \
 	sparse_to_tuple, preprocess_user_item_features, globally_normalize_bipartite_adjacency, \
-	load_data_monti, load_official_trainvaltest_split, normalize_features, get_edges_matrices
+	load_data_monti, load_official_trainvaltest_split, normalize_features, get_edges_matrices, load_facebook_data_link_prediction, load_facebook_data
 from model import RecommenderGAE, RecommenderSideInfoGAE
 from utils import construct_feed_dict
 
 def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HIDDEN=[100, 75], FEATHIDDEN=64, LR=0.01, decay_rate=1.25, consecutive_threshold=5, 
-	FEATURES=False, SYM=True, TESTING=False, ACCUM='stackRGGCN', NUM_LAYERS=1, GCMC_INDICES=False, VERBOSE=False, DROPOUT_EDGES=True):
+	FEATURES=False, SYM=True, TESTING=False, ACCUM='stackRGGCN', NUM_LAYERS=1, GCMC_INDICES=False, VERBOSE=False, DROPOUT_EDGES=True, 
+	val_fraction=0.1, test_fraction=0.15, normalise_edges=False):
 	np.random.seed(random_seed)
-	tf.set_random_seed(random_seed)
+	# tf.set_random_seed(random_seed)
 
 	SELFCONNECTIONS = False
 	SPLITFROMFILE = True
@@ -46,6 +47,8 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 			print('Consider using "--accum stack" as an option for this dataset.')
 			print('If you want to proceed with this option anyway, uncomment this.\n')
 			sys.exit(1)
+	elif DATASET == 'facebook':
+		NUMCLASSES = 2
 
 	# Splitting dataset in training, validation and test set
 
@@ -70,6 +73,20 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 		u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices, \
 			val_labels, val_u_indices, val_v_indices, test_labels, \
 			test_u_indices, test_v_indices, class_values = load_official_trainvaltest_split(DATASET, TESTING)
+
+	elif DATASET == 'facebook':
+		adj = np.load('data/facebook/adjacency2.npy')
+		u_features = sp.csr_matrix(np.load('data/facebook/user_features.npy'))
+		v_features = sp.csr_matrix(np.load('data/facebook/user_features.npy'))
+		edges_fraction = 0.01 # this gives around as many non-edges as connected edges.
+		# adj_train, train_labels, train_u_indices, train_v_indices, \
+		# 	val_labels, val_u_indices, val_v_indices, test_labels, \
+		# 	test_u_indices, test_v_indices, class_values = load_facebook_data(adj, observed_fraction, edges_fraction)
+
+		adj_train, train_labels, train_u_indices, train_v_indices, \
+			val_labels, val_u_indices, val_v_indices, test_labels, \
+			test_u_indices, test_v_indices, class_values = load_facebook_data_link_prediction(adj, edges_fraction, val_fraction, test_fraction)
+
 	else:
 		print("Using random dataset split ...")
 		u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices, \
@@ -256,7 +273,7 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 	}
 
 	##################################################################################################################
-	E_start, E_end = get_edges_matrices(adj_train)
+	E_start, E_end = get_edges_matrices(adj_train, normalise_edges, DO)
 	# E_start = sp.hstack(E_start, format='csr')  # confirm if vstack is correct and not hstack
 	# E_end = sp.hstack(E_end, format='csr')
 
@@ -481,32 +498,35 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 
 
 	if TESTING:
-		test_avg_loss, test_rmse = sess.run([model.loss, model.rmse], feed_dict=test_feed_dict)
+		test_avg_loss, test_rmse, test_accuracy = sess.run([model.loss, model.rmse, model.accuracy], feed_dict=test_feed_dict)
 		print('test loss = ', test_avg_loss)
 		print('test rmse = ', test_rmse)
+		print('test accuracy = ', test_accuracy)
 
 		# restore with polyak averages of parameters
 		variables_to_restore = model.variable_averages.variables_to_restore()
 		saver = tf.train.Saver(variables_to_restore)
 		saver.restore(sess, save_path)
 
-		test_avg_loss, test_rmse = sess.run([model.loss, model.rmse], feed_dict=test_feed_dict)
+		test_avg_loss, test_rmse, test_accuracy = sess.run([model.loss, model.rmse, model.accuracy], feed_dict=test_feed_dict)
 		print('polyak test loss = ', test_avg_loss)
 		print('polyak test rmse = ', test_rmse)
+		print('polyak test accuracy = ', test_accuracy)
 
 		sess.close()
 		tf.reset_default_graph()
-		return train_rmses, val_rmses, train_losses, val_losses, test_rmse
+		return train_rmses, val_rmses, train_losses, val_losses, test_rmse, test_accuracy
 	else:
 		# restore with polyak averages of parameters
 		variables_to_restore = model.variable_averages.variables_to_restore()
 		saver = tf.train.Saver(variables_to_restore)
 		saver.restore(sess, save_path)
 
-		val_avg_loss, val_rmse = sess.run([model.loss, model.rmse], feed_dict=val_feed_dict)
+		val_avg_loss, val_rmse, val_accuracy = sess.run([model.loss, model.rmse, model.accuracy], feed_dict=val_feed_dict)
 		print('polyak val loss = ', val_avg_loss)
 		print('polyak val rmse = ', val_rmse)
+		print('polyak val accuracy = ', val_accuracy)
 
 		sess.close()
 		tf.reset_default_graph()
-		return train_rmses, val_rmses, train_losses, val_losses, val_rmse
+		return train_rmses, val_rmses, train_losses, val_losses, val_rmse, val_accuracy

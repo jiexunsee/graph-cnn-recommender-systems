@@ -162,6 +162,7 @@ elif DATASET == 'yahoo_music':
 		print('If you want to proceed with this option anyway, uncomment this.\n')
 		sys.exit(1)
 elif DATASET == 'facebook':
+	FEATURES == True
 	NUMCLASSES = 2
 
 # Splitting dataset in training, validation and test set
@@ -190,8 +191,8 @@ elif DATASET == 'ml_100k':
 
 elif DATASET == 'facebook':
 	adj = np.load('data/facebook/adjacency2.npy')
-	u_features = np.load('data/facebook/user_features.npy')
-	v_features = np.load('data/facebook/user_features.npy')
+	u_features = sp.csr_matrix(np.load('data/facebook/user_features.npy'))
+	v_features = sp.csr_matrix(np.load('data/facebook/user_features.npy'))
 	edges_fraction = 0.01 # this gives around as many non-edges as connected edges.
 	# adj_train, train_labels, train_u_indices, train_v_indices, \
 	# 	val_labels, val_u_indices, val_v_indices, test_labels, \
@@ -389,7 +390,7 @@ placeholders = {
 }
 
 ##################################################################################################################
-E_start, E_end = get_edges_matrices(adj_train, normalise_edges)
+E_start, E_end = get_edges_matrices(adj_train, normalise_edges, DO)
 # E_start = sp.hstack(E_start, format='csr')  # confirm if vstack is correct and not hstack
 # E_end = sp.hstack(E_end, format='csr')
 
@@ -616,18 +617,20 @@ if VERBOSE:
 
 
 if TESTING:
-	test_avg_loss, test_rmse = sess.run([model.loss, model.rmse], feed_dict=test_feed_dict)
+	test_avg_loss, test_rmse, test_accuracy = sess.run([model.loss, model.rmse, model.accuracy], feed_dict=test_feed_dict)
 	print('test loss = ', test_avg_loss)
 	print('test rmse = ', test_rmse)
+	print('test accuracy = ', test_accuracy)
 
 	# restore with polyak averages of parameters
 	variables_to_restore = model.variable_averages.variables_to_restore()
 	saver = tf.train.Saver(variables_to_restore)
 	saver.restore(sess, save_path)
 
-	test_avg_loss, test_rmse = sess.run([model.loss, model.rmse], feed_dict=test_feed_dict)
+	test_avg_loss, test_rmse, test_accuracy = sess.run([model.loss, model.rmse, model.accuracy], feed_dict=test_feed_dict)
 	print('polyak test loss = ', test_avg_loss)
 	print('polyak test rmse = ', test_rmse)
+	print('polyak test accuracy = ', test_accuracy)
 
 else:
 	# restore with polyak averages of parameters
@@ -635,9 +638,10 @@ else:
 	saver = tf.train.Saver(variables_to_restore)
 	saver.restore(sess, save_path)
 
-	val_avg_loss, val_rmse = sess.run([model.loss, model.rmse], feed_dict=val_feed_dict)
+	val_avg_loss, val_rmse, val_accuracy = sess.run([model.loss, model.rmse, model.accuracy], feed_dict=val_feed_dict)
 	print('polyak val loss = ', val_avg_loss)
 	print('polyak val rmse = ', val_rmse)
+	print('polyak val accuracy = ', val_accuracy)
 
 print('\nSETTINGS:\n')
 for key, val in sorted(vars(ap.parse_args()).items()):

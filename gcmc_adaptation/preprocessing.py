@@ -468,10 +468,18 @@ def load_facebook_data_link_prediction(adj, edges_fraction, val_fraction=0.2, te
     v_test_idx = [v for u, v in test_edges]
     class_values = np.array([1, 2])
 
+    # only keep connected edges in test set. comment out if desired.
+    print('original test length: {}'.format(len(test_labels))) # rmse 0.222 after 250 epochs
+    # indices = np.where(np.array(test_labels) == 1)[0]
+    # test_labels = [test_labels[i] for i in indices]
+    # u_test_idx = [u_test_idx[i] for i in indices]
+    # v_test_idx = [v_test_idx[i] for i in indices]
+    # print('new test length: {}'.format(len(v_test_idx)))
+
     return adj_train, train_labels, u_train_idx, v_train_idx, \
         val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values
 
-def get_edges_matrices(adj, normalise_edges, separate=True):
+def get_edges_matrices(adj, normalise_edges, dropout=0, separate=True):
     # check what range of values adj has
     adj = adj.toarray()  # adj.shape is 3000x3000 because it's users x items. but want it to be (users+items) x (users+items) for full adj matrix.
     n_users = adj.shape[0]
@@ -510,8 +518,9 @@ def get_edges_matrices(adj, normalise_edges, separate=True):
             # edge_to_ending_vertex = sp.coo_matrix(e_end)
             ###
             if normalise_edges:
-                edge_to_starting_vertex = normalize(edge_to_starting_vertex, norm='l1', axis=0)
-                edge_to_ending_vertex = normalize(edge_to_ending_vertex, norm='l1', axis=0)
+                print('normalising edges with dropout of {}'.format(dropout))
+                edge_to_starting_vertex = normalize(edge_to_starting_vertex/dropout, norm='l1', axis=0)
+                edge_to_ending_vertex = normalize(edge_to_ending_vertex/dropout, norm='l1', axis=0)
             E_start.append(edge_to_starting_vertex)
             E_end.append(edge_to_ending_vertex)
 
