@@ -1,7 +1,7 @@
 from __future__ import print_function
 from layers import *
 
-from metrics import softmax_accuracy, expected_rmse, softmax_cross_entropy
+from metrics import softmax_accuracy, expected_rmse, softmax_cross_entropy, softmax_precision, softmax_recall, softmax_precision_recall
 
 
 flags = tf.app.flags
@@ -61,6 +61,9 @@ class Model(object):
         # Build metrics
         self._loss()
         self._accuracy()
+        # self._precision()
+        # self._recall()
+        self._precision_recall()
 
         self.opt_op = self.optimizer.minimize(self.loss, global_step=self.global_step)
 
@@ -71,6 +74,12 @@ class Model(object):
         raise NotImplementedError
 
     def _accuracy(self):
+        raise NotImplementedError
+
+    def _precision(self):
+        raise NotImplementedError
+
+    def _recall(self):
         raise NotImplementedError
 
     def save(self, sess=None):
@@ -146,6 +155,15 @@ class RecommenderGAE(Model):
 
     def _accuracy(self):
         self.accuracy = softmax_accuracy(self.outputs, self.labels)
+
+    # def _precision(self):
+    #     self.precision = softmax_precision(self.outputs, self.labels)
+
+    # def _recall(self):
+    #     self.recall = softmax_recall(self.outputs, self.labels)
+
+    def _precision_recall(self):
+        self.precision, self.recall = softmax_precision_recall(self.outputs, self.labels)
 
     def _rmse(self):
         self.rmse = expected_rmse(self.outputs, self.labels, self.class_values)
@@ -426,6 +444,15 @@ class RecommenderSideInfoGAE(Model):
     def _accuracy(self):
         self.accuracy = softmax_accuracy(self.outputs, self.labels)
 
+    # def _precision(self):
+    #     self.precision = softmax_precision(self.outputs, self.labels)
+
+    # def _recall(self):
+    #     self.recall = softmax_recall(self.outputs, self.labels)
+
+    def _precision_recall(self):
+        self.precision, self.recall = softmax_precision_recall(self.outputs, self.labels)
+
     def _rmse(self):
         self.rmse = expected_rmse(self.outputs, self.labels, self.class_values)
 
@@ -688,5 +715,8 @@ class RecommenderSideInfoGAE(Model):
         # Build metrics
         self._loss()
         self._accuracy()
+        # self._precision()
+        # self._recall()
+        self._precision_recall()
 
         self.opt_op = self.optimizer.minimize(self.loss, global_step=self.global_step)

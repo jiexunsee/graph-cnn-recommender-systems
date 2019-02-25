@@ -12,6 +12,30 @@ def softmax_accuracy(preds, labels):
     accuracy_all = tf.cast(correct_prediction, tf.float32)
     return tf.reduce_mean(accuracy_all)
 
+def softmax_precision(preds, labels):
+    preds = tf.argmax(preds, 1)
+    labels = tf.to_int64(labels)
+    precision = tf.metrics.precision(labels, preds)
+    return precision
+
+def softmax_precision_recall(preds, labels):
+    predicted = tf.argmax(preds, 1)
+    actual = tf.to_int64(labels)
+    TP = tf.count_nonzero(predicted * actual)
+    TN = tf.count_nonzero((predicted - 1) * (actual - 1))
+    FP = tf.count_nonzero(predicted * (actual - 1))
+    FN = tf.count_nonzero((predicted - 1) * actual)
+    precision = TP / (TP + FP)
+    recall = TP / (TP + FN)
+    # precision = tf.divide(TP, tf.add(TP, FP))
+    # recall = tf.divide(TP, tf.add(TP, FN))
+    return precision, recall
+
+def softmax_recall(preds, labels):
+    preds = tf.argmax(preds, 1)
+    recall = tf.metrics.precision(labels, preds)
+    return recall
+
 
 def expected_rmse(logits, labels, class_values=None):
     """

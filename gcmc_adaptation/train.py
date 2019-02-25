@@ -406,7 +406,7 @@ for i in range(num_support):
 	placeholders['E_end_list'].append(tf.sparse_placeholder(tf.float32, shape=(None, None)))
 	placeholders['E_start_nonzero_list'].append(tf.placeholder(tf.int32, shape=()))
 	placeholders['E_end_nonzero_list'].append(tf.placeholder(tf.int32, shape=()))
-print('shape of E_end for first rating type: {}'.format(E_end[0].toarray().shape))
+# print('shape of E_end for first rating type: {}'.format(E_end[0].toarray().shape))
 
 ##################################################################################################################
 
@@ -503,7 +503,8 @@ test_feed_dict = construct_feed_dict(placeholders, u_features, v_features, u_fea
 merged_summary = tf.summary.merge_all()
 
 sess = tf.Session()
-sess.run(tf.global_variables_initializer())
+initializers = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+sess.run(initializers)
 
 if WRITESUMMARY:
 	train_summary_writer = tf.summary.FileWriter(SUMMARIESDIR + '/train', sess.graph)
@@ -617,20 +618,24 @@ if VERBOSE:
 
 
 if TESTING:
-	test_avg_loss, test_rmse, test_accuracy = sess.run([model.loss, model.rmse, model.accuracy], feed_dict=test_feed_dict)
+	test_avg_loss, test_rmse, test_accuracy, test_precision, test_recall = sess.run([model.loss, model.rmse, model.accuracy, model.precision, model.recall], feed_dict=test_feed_dict)
 	print('test loss = ', test_avg_loss)
 	print('test rmse = ', test_rmse)
 	print('test accuracy = ', test_accuracy)
+	print('test precision = ', test_precision)
+	print('test recall = ', test_recall)
 
 	# restore with polyak averages of parameters
 	variables_to_restore = model.variable_averages.variables_to_restore()
 	saver = tf.train.Saver(variables_to_restore)
 	saver.restore(sess, save_path)
 
-	test_avg_loss, test_rmse, test_accuracy = sess.run([model.loss, model.rmse, model.accuracy], feed_dict=test_feed_dict)
+	test_avg_loss, test_rmse, test_accuracy, test_precision, test_recall = sess.run([model.loss, model.rmse, model.accuracy, model.precision, model.recall], feed_dict=test_feed_dict)
 	print('polyak test loss = ', test_avg_loss)
 	print('polyak test rmse = ', test_rmse)
 	print('polyak test accuracy = ', test_accuracy)
+	print('polyak test precision = ', test_precision)
+	print('polyak test recall = ', test_recall)
 
 else:
 	# restore with polyak averages of parameters
@@ -638,10 +643,12 @@ else:
 	saver = tf.train.Saver(variables_to_restore)
 	saver.restore(sess, save_path)
 
-	val_avg_loss, val_rmse, val_accuracy = sess.run([model.loss, model.rmse, model.accuracy], feed_dict=val_feed_dict)
+	val_avg_loss, val_rmse, val_accuracy, val_precision, val_recall = sess.run([model.loss, model.rmse, model.accuracy, model.precision, model.recall], feed_dict=val_feed_dict)
 	print('polyak val loss = ', val_avg_loss)
 	print('polyak val rmse = ', val_rmse)
 	print('polyak val accuracy = ', val_accuracy)
+	print('polyak val precision = ', val_precision)
+	print('polyak val recall = ', val_recall)
 
 print('\nSETTINGS:\n')
 for key, val in sorted(vars(ap.parse_args()).items()):

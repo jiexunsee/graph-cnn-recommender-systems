@@ -384,7 +384,8 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 	merged_summary = tf.summary.merge_all()
 
 	sess = tf.Session()
-	sess.run(tf.global_variables_initializer())
+	initializers = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+	sess.run(initializers)
 
 	if WRITESUMMARY:
 		train_summary_writer = tf.summary.FileWriter(SUMMARIESDIR + '/train', sess.graph)
@@ -498,7 +499,7 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 
 
 	if TESTING:
-		test_avg_loss, test_rmse, test_accuracy = sess.run([model.loss, model.rmse, model.accuracy], feed_dict=test_feed_dict)
+		test_avg_loss, test_rmse, test_accuracy, test_precision, test_recall = sess.run([model.loss, model.rmse, model.accuracy, model.precision, model.recall], feed_dict=test_feed_dict)
 		print('test loss = ', test_avg_loss)
 		print('test rmse = ', test_rmse)
 		print('test accuracy = ', test_accuracy)
@@ -508,25 +509,25 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 		saver = tf.train.Saver(variables_to_restore)
 		saver.restore(sess, save_path)
 
-		test_avg_loss, test_rmse, test_accuracy = sess.run([model.loss, model.rmse, model.accuracy], feed_dict=test_feed_dict)
+		test_avg_loss, test_rmse, test_accuracy, test_precision, test_recall = sess.run([model.loss, model.rmse, model.accuracy, model.precision, model.recall], feed_dict=test_feed_dict)
 		print('polyak test loss = ', test_avg_loss)
 		print('polyak test rmse = ', test_rmse)
 		print('polyak test accuracy = ', test_accuracy)
 
 		sess.close()
 		tf.reset_default_graph()
-		return train_rmses, val_rmses, train_losses, val_losses, test_rmse, test_accuracy
+		return train_rmses, val_rmses, train_losses, val_losses, test_rmse, test_accuracy, test_precision, test_recall
 	else:
 		# restore with polyak averages of parameters
 		variables_to_restore = model.variable_averages.variables_to_restore()
 		saver = tf.train.Saver(variables_to_restore)
 		saver.restore(sess, save_path)
 
-		val_avg_loss, val_rmse, val_accuracy = sess.run([model.loss, model.rmse, model.accuracy], feed_dict=val_feed_dict)
+		val_avg_loss, val_rmse, val_accuracy, val_precision, val_recall = sess.run([model.loss, model.rmse, model.accuracy, model.precision, model.recall], feed_dict=val_feed_dict)
 		print('polyak val loss = ', val_avg_loss)
 		print('polyak val rmse = ', val_rmse)
 		print('polyak val accuracy = ', val_accuracy)
 
 		sess.close()
 		tf.reset_default_graph()
-		return train_rmses, val_rmses, train_losses, val_losses, val_rmse, val_accuracy
+		return train_rmses, val_rmses, train_losses, val_losses, val_rmse, val_accuracy, val_precision, val_recall
