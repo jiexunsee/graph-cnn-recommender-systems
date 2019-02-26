@@ -334,7 +334,7 @@ def load_data_monti(dataset, testing=False):
     return u_features, v_features, rating_mx_train, train_labels, u_train_idx, v_train_idx, \
         val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values
 
-def load_facebook_data(adj, observed_fraction, edges_fraction, val_fraction=0.2):
+def load_facebook_data(adj, observed_fraction, edges_fraction, val_fraction=0.2, testing=True):
     print('loading facebook data...')
     n_users = adj.shape[0]
     row, col = np.where(adj == 2)
@@ -420,6 +420,13 @@ def load_facebook_data(adj, observed_fraction, edges_fraction, val_fraction=0.2)
     v_test_idx = [v for u, v in unobserved_pairs]
     test_labels = np.ones(len(u_test_idx))
     class_values = np.array([1, 2])
+
+    if testing: # if testing, this will combine the train and val idx to form a bigger training set
+        u_train_idx = np.hstack([u_train_idx, u_val_idx])
+        v_train_idx = np.hstack([v_train_idx, v_val_idx])
+        train_labels = np.hstack([train_labels, val_labels])
+        # for adjacency matrix construction
+        train_idx = np.hstack([train_idx, val_idx])
 
     return adj_train, train_labels, u_train_idx, v_train_idx, \
         val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values

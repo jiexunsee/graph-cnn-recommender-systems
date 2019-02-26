@@ -18,13 +18,14 @@ ACCUM = 'simple'
 DROPOUT_EDGES = False
 VF = 0.1
 TF = 0.15
+OF = 0.75
 
 all_train_rmses, all_val_rmses, all_train_losses, all_val_losses, all_rmse, all_accuracy, all_precision, all_recall = [], [], [], [], [], [], [], []
 experiment_name = '{} with {}, DE {}'.format(DATASET, ACCUM, DROPOUT_EDGES)
 for i in range(iterations):
 	print('runnning experiment for {}'.format(experiment_name))
 	params_dict = {'DATASET': DATASET, 'FEATURES': FEATURES, 'NB_EPOCH': NB_EPOCH, 'DO': DO, 'HIDDEN': HIDDEN, 'NUM_LAYERS': NUM_LAYERS, 'TESTING': TESTING,
-					'VERBOSE': VERBOSE, 'ACCUM': ACCUM, 'DROPOUT_EDGES': DROPOUT_EDGES, 'val_fraction': VF, 'test_fraction': TF}
+					'VERBOSE': VERBOSE, 'ACCUM': ACCUM, 'DROPOUT_EDGES': DROPOUT_EDGES, 'val_fraction': VF, 'test_fraction': TF, 'observed_fraction': OF}
 	train_rmses, val_rmses, train_losses, val_losses, rmse, accuracy, precision, recall = run(**params_dict)
 	all_train_rmses.append(train_rmses)
 	all_val_rmses.append(val_rmses)
@@ -48,13 +49,14 @@ print('average recall: {}'.format(np.mean(all_recall)))
 NB_EPOCH = 2000
 VF = 0.1
 TF = 0.4
+OF = 0.5
 
 all_train_rmses, all_val_rmses, all_train_losses, all_val_losses, all_rmse, all_accuracy, all_precision, all_recall = [], [], [], [], [], [], [], []
 experiment_name = '{} with {}, DE {}'.format(DATASET, ACCUM, DROPOUT_EDGES)
 for i in range(iterations):
 	print('runnning experiment for {}'.format(experiment_name))
 	params_dict = {'DATASET': DATASET, 'FEATURES': FEATURES, 'NB_EPOCH': NB_EPOCH, 'DO': DO, 'HIDDEN': HIDDEN, 'NUM_LAYERS': NUM_LAYERS, 'TESTING': TESTING,
-					'VERBOSE': VERBOSE, 'ACCUM': ACCUM, 'DROPOUT_EDGES': DROPOUT_EDGES, 'val_fraction': VF, 'test_fraction': TF}
+					'VERBOSE': VERBOSE, 'ACCUM': ACCUM, 'DROPOUT_EDGES': DROPOUT_EDGES, 'val_fraction': VF, 'test_fraction': TF, 'observed_fraction': OF}
 	train_rmses, val_rmses, train_losses, val_losses, rmse, accuracy, precision, recall = run(**params_dict)
 	all_train_rmses.append(train_rmses)
 	all_val_rmses.append(val_rmses)
@@ -78,13 +80,14 @@ print('average recall: {}'.format(np.mean(all_recall)))
 NB_EPOCH = 1000
 VF = 0.1
 TF = 0.65
+OF = 0.25
 
 all_train_rmses, all_val_rmses, all_train_losses, all_val_losses, all_rmse, all_accuracy, all_precision, all_recall = [], [], [], [], [], [], [], []
 experiment_name = '{} with {}, DE {}'.format(DATASET, ACCUM, DROPOUT_EDGES)
 for i in range(iterations):
 	print('runnning experiment for {}'.format(experiment_name))
 	params_dict = {'DATASET': DATASET, 'FEATURES': FEATURES, 'NB_EPOCH': NB_EPOCH, 'DO': DO, 'HIDDEN': HIDDEN, 'NUM_LAYERS': NUM_LAYERS, 'TESTING': TESTING,
-					'VERBOSE': VERBOSE, 'ACCUM': ACCUM, 'DROPOUT_EDGES': DROPOUT_EDGES, 'val_fraction': VF, 'test_fraction': TF}
+					'VERBOSE': VERBOSE, 'ACCUM': ACCUM, 'DROPOUT_EDGES': DROPOUT_EDGES, 'val_fraction': VF, 'test_fraction': TF, 'observed_fraction': OF}
 	train_rmses, val_rmses, train_losses, val_losses, rmse, accuracy, precision, recall = run(**params_dict)
 	all_train_rmses.append(train_rmses)
 	all_val_rmses.append(val_rmses)

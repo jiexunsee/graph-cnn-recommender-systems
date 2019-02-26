@@ -21,7 +21,7 @@ from utils import construct_feed_dict
 
 def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HIDDEN=[100, 75], FEATHIDDEN=64, LR=0.01, decay_rate=1.25, consecutive_threshold=5, 
 	FEATURES=False, SYM=True, TESTING=False, ACCUM='stackRGGCN', NUM_LAYERS=1, GCMC_INDICES=False, VERBOSE=False, DROPOUT_EDGES=True, 
-	val_fraction=0.1, test_fraction=0.15, normalise_edges=False):
+	val_fraction=0.1, test_fraction=0.15, normalise_edges=False, observed_fraction=0.75):
 	np.random.seed(random_seed)
 	# tf.set_random_seed(random_seed)
 
@@ -80,13 +80,13 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 			u_features = sp.csr_matrix(np.load('data/facebook/user_features.npy'))
 			v_features = sp.csr_matrix(np.load('data/facebook/user_features.npy'))
 		edges_fraction = 0.01 # this gives around as many non-edges as connected edges.
-		# adj_train, train_labels, train_u_indices, train_v_indices, \
-		# 	val_labels, val_u_indices, val_v_indices, test_labels, \
-		# 	test_u_indices, test_v_indices, class_values = load_facebook_data(adj, observed_fraction, edges_fraction)
-
 		adj_train, train_labels, train_u_indices, train_v_indices, \
 			val_labels, val_u_indices, val_v_indices, test_labels, \
-			test_u_indices, test_v_indices, class_values = load_facebook_data_link_prediction(adj, edges_fraction, val_fraction, test_fraction)
+			test_u_indices, test_v_indices, class_values = load_facebook_data(adj, observed_fraction, edges_fraction)
+
+		# adj_train, train_labels, train_u_indices, train_v_indices, \
+		# 	val_labels, val_u_indices, val_v_indices, test_labels, \
+		# 	test_u_indices, test_v_indices, class_values = load_facebook_data_link_prediction(adj, edges_fraction, val_fraction, test_fraction)
 
 	else:
 		print("Using random dataset split ...")
