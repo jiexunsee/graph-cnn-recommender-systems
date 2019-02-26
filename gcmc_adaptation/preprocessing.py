@@ -403,14 +403,6 @@ def load_facebook_data(adj, observed_fraction, edges_fraction, val_fraction=0.2,
     val_labels = np.concatenate([val_pairs_labels, val_edges_labels])
     print('merged edges... {} train, {} val'.format(len(train_labels), len(val_labels)))
 
-    # populate adj_train
-    adj_train = np.zeros((n_users, n_users))
-    for i, edge in enumerate(all_train_edges):
-        u = edge[0]
-        v = edge[1]
-        adj_train[u, v] = train_labels[i] + 1
-    adj_train = sp.csr_matrix(adj_train)
-
     # variables to be returned. labels are 0, 1. even though class_values is [1, 2].
     u_train_idx = [u for u, v in all_train_edges]
     v_train_idx = [v for u, v in all_train_edges]
@@ -425,8 +417,12 @@ def load_facebook_data(adj, observed_fraction, edges_fraction, val_fraction=0.2,
         u_train_idx = np.hstack([u_train_idx, u_val_idx])
         v_train_idx = np.hstack([v_train_idx, v_val_idx])
         train_labels = np.hstack([train_labels, val_labels])
-        # for adjacency matrix construction
-        train_idx = np.hstack([train_idx, val_idx])
+
+    # populate adj_train
+    adj_train = np.zeros((n_users, n_users))
+    for u, v in zip(u_train_idx, v_train_idx):
+        adj_train[u, v] = train_labels[i] + 1
+    adj_train = sp.csr_matrix(adj_train)
 
     return adj_train, train_labels, u_train_idx, v_train_idx, \
         val_labels, u_val_idx, v_val_idx, test_labels, u_test_idx, v_test_idx, class_values
