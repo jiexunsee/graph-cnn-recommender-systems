@@ -5,7 +5,7 @@ import numpy as np
 
 iterations = 5
 
-NB_EPOCH = 3000
+NB_EPOCH = 2000
 DO = 0.5
 HIDDEN = [100, 25]
 NUM_LAYERS = 2
@@ -14,7 +14,7 @@ DATASET = 'facebook'
 TESTING = True
 VERBOSE = False
 FEATURES = True
-ACCUM = 'stackRGGCN'
+ACCUM = 'stack'
 DROPOUT_EDGES = False
 VF = 0.1
 TF = 0.15
