@@ -420,8 +420,8 @@ def load_facebook_data(adj, observed_fraction, edges_fraction, val_fraction=0.2,
 
     # populate adj_train
     adj_train = np.zeros((n_users, n_users))
-    for u, v in zip(u_train_idx, v_train_idx):
-        adj_train[u, v] = train_labels[i] + 1
+    for u, v, l in zip(u_train_idx, v_train_idx, train_labels):
+        adj_train[u, v] = l + 1
     adj_train = sp.csr_matrix(adj_train)
 
     return adj_train, train_labels, u_train_idx, v_train_idx, \
