@@ -191,8 +191,9 @@ elif DATASET == 'ml_100k':
 
 elif DATASET == 'facebook':
 	adj = np.load('data/facebook/adjacency2.npy')
-	u_features = sp.csr_matrix(np.load('data/facebook/user_features.npy'))
-	v_features = sp.csr_matrix(np.load('data/facebook/user_features.npy'))
+	if FEATURES:
+		u_features = sp.csr_matrix(np.load('data/facebook/user_features.npy'))
+		v_features = sp.csr_matrix(np.load('data/facebook/user_features.npy'))
 	edges_fraction = 0.01 # this gives around as many non-edges as connected edges.
 	# adj_train, train_labels, train_u_indices, train_v_indices, \
 	# 	val_labels, val_u_indices, val_v_indices, test_labels, \
