@@ -375,7 +375,7 @@ def load_facebook_data(adj, observed_fraction, edges_fraction, val_fraction=0.2,
     val_pairs_indices = rand_idx[n_train_pairs:]
     train_pairs = [observed_pairs[i] for i in train_pairs_indices] # pairs refers to nodes that are connected
     val_pairs = [observed_pairs[i] for i in val_pairs_indices]
-    print('obtained pairs... {} train, {} val'.format(len(train_pairs), len(val_pairs)))
+    print('obtained pairs... {} train, {} val, {} test'.format(len(train_pairs), len(val_pairs), len(unobserved_pairs)))
 
     # get train and val unconnected edges
     row, col = np.where(adj_observed == 1)
@@ -390,26 +390,39 @@ def load_facebook_data(adj, observed_fraction, edges_fraction, val_fraction=0.2,
     val_edges_indices = rand_idx[n_train_edges:n_train_edges+n_val_edges]
     train_edges = [unconnected_edges[i] for i in train_edges_indices]
     val_edges = [unconnected_edges[i] for i in val_edges_indices]
-    print('obtained edges... {} train, {} val'.format(len(train_edges), len(val_edges)))
+
+    # get test unconnected edges
+    row, col = np.where(adj_unobserved == 1)
+    unconnected_edges = [(u, v) for u, v in zip(row, col)]
+    rand_idx = list(range(len(unconnected_edges)))
+    np.random.seed(41)
+    np.random.shuffle(rand_idx)
+    test_edges_indices = rand_idx[:int(len(unconnected_edges)*edges_fraction)]
+    test_edges = [unconnected_edges[i] for i in test_edges_indices]
+    print('obtained edges... {} train, {} val, {} test'.format(len(train_edges), len(val_edges), len(test_edges)))
 
     # merge with connected train and val edges
     all_train_edges = train_pairs + train_edges
     all_val_edges = val_pairs + val_edges
+    all_test_edges = unobserved_pairs + test_edges
     train_pairs_labels = np.ones(len(train_pairs))
     train_edges_labels = np.zeros(len(train_edges))
     val_pairs_labels = np.ones(len(val_pairs))
     val_edges_labels = np.zeros(len(val_edges))
+    test_pairs_labels = np.ones(len(unobserved_pairs))
+    test_edges_labels = np.zeros(len(test_edges))
     train_labels = np.concatenate([train_pairs_labels, train_edges_labels])
     val_labels = np.concatenate([val_pairs_labels, val_edges_labels])
-    print('merged edges... {} train, {} val'.format(len(train_labels), len(val_labels)))
+    test_labels = np.concatenate([test_pairs_labels, test_edges_labels])
+    print('merged edges... {} train, {} val, {} test'.format(len(train_labels), len(val_labels), len(test_labels)))
 
     # variables to be returned. labels are 0, 1. even though class_values is [1, 2].
     u_train_idx = [u for u, v in all_train_edges]
     v_train_idx = [v for u, v in all_train_edges]
     u_val_idx = [u for u, v in all_val_edges]
     v_val_idx = [v for u, v in all_val_edges]
-    u_test_idx = [u for u, v in unobserved_pairs]
-    v_test_idx = [v for u, v in unobserved_pairs]
+    u_test_idx = [u for u, v in all_test_edges]
+    v_test_idx = [v for u, v in all_test_edges]
     test_labels = np.ones(len(u_test_idx))
     class_values = np.array([1, 2])
 
