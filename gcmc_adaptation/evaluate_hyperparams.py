@@ -7,7 +7,7 @@ iterations = 5
 
 NB_EPOCH = 3000
 DO = 0.5
-HIDDEN = [100, 75]
+HIDDEN = [100, 25]
 NUM_LAYERS = 2
 
 DATASET = 'facebook'

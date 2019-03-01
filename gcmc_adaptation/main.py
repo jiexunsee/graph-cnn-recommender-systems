@@ -80,13 +80,13 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 			u_features = sp.csr_matrix(np.load('data/facebook/user_features.npy'))
 			v_features = sp.csr_matrix(np.load('data/facebook/user_features.npy'))
 		edges_fraction = 0.01 # this gives around as many non-edges as connected edges.
-		adj_train, train_labels, train_u_indices, train_v_indices, \
-			val_labels, val_u_indices, val_v_indices, test_labels, \
-			test_u_indices, test_v_indices, class_values = load_facebook_data(adj, observed_fraction, edges_fraction)
-
 		# adj_train, train_labels, train_u_indices, train_v_indices, \
 		# 	val_labels, val_u_indices, val_v_indices, test_labels, \
-		# 	test_u_indices, test_v_indices, class_values = load_facebook_data_link_prediction(adj, edges_fraction, val_fraction, test_fraction)
+		# 	test_u_indices, test_v_indices, class_values = load_facebook_data(adj, observed_fraction, edges_fraction)
+
+		adj_train, train_labels, train_u_indices, train_v_indices, \
+			val_labels, val_u_indices, val_v_indices, test_labels, \
+			test_u_indices, test_v_indices, class_values = load_facebook_data_link_prediction(adj, edges_fraction, val_fraction, test_fraction)
 
 	else:
 		print("Using random dataset split ...")
@@ -101,6 +101,7 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 
 	# feature loading
 	if not FEATURES:
+		print('using one-hot vectors as features')
 		u_features = sp.identity(num_users, format='csr') # features is just one-hot vector!
 		v_features = sp.identity(num_items, format='csr')
 
