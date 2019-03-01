@@ -1,3 +1,10 @@
+## 1 Mar 2019
+* Applied GCN autoencoder matrix completion algorithm to this [SNAP facebook dataset](https://snap.stanford.edu/data/ego-Facebook.html)
+  * Best results found in literature do well with the problem framed as a network completion problem. Network completion problem: dataset split into observed and unobserved nodes.
+  * Good results obtained when framing the problem as a link prediction problem. However no literature to compare results with for link prediction setting.
+  * Yet to be investigated: Removing the feature data and relying only on graph structure to predict edges.
+* Normalisation option added, but produces worse results, so it is not applied.
+
 ## 15 Feb 2019
 **To do:**
 * Find another domain (e.g. biomedical) to apply this framework of graph autoencoder matrix factorisation and completion. Possible domains:
