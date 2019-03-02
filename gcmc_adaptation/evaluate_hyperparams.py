@@ -108,7 +108,7 @@ print('average accuracy: {}'.format(np.mean(all_accuracy)))
 print('average precision: {}'.format(np.mean(all_precision)))
 print('average recall: {}'.format(np.mean(all_recall)))
 
-accum = 'stackRGGCN'
+ACCUM = 'stackRGGCN'
 NB_EPOCH = 2000
 VF = 0.1
 TF = 0.4
