@@ -12,6 +12,7 @@ import scipy.sparse as sp
 import sys
 import json
 from tqdm import tqdm
+from sklearn.metrics import roc_auc_score
 
 from preprocessing import create_trainvaltest_split, \
 	sparse_to_tuple, preprocess_user_item_features, globally_normalize_bipartite_adjacency, \
@@ -501,35 +502,41 @@ def run(DATASET='douban', DATASEED=1234, random_seed=123, NB_EPOCH=200, DO=0, HI
 
 
 	if TESTING:
-		test_avg_loss, test_rmse, test_accuracy, test_precision, test_recall = sess.run([model.loss, model.rmse, model.accuracy, model.precision, model.recall], feed_dict=test_feed_dict)
+		test_avg_loss, test_rmse, test_accuracy, test_precision, test_recall, preds = sess.run([model.loss, model.rmse, model.accuracy, model.precision, model.recall, model.outputs], feed_dict=test_feed_dict)
 		print('test loss = ', test_avg_loss)
 		print('test rmse = ', test_rmse)
 		print('test accuracy = ', test_accuracy)
+		preds = np.argmax(preds, 1)
+		auc = roc_auc_score(test_labels, preds)
 
 		# restore with polyak averages of parameters
 		variables_to_restore = model.variable_averages.variables_to_restore()
 		saver = tf.train.Saver(variables_to_restore)
 		saver.restore(sess, save_path)
 
-		test_avg_loss, test_rmse, test_accuracy, test_precision, test_recall = sess.run([model.loss, model.rmse, model.accuracy, model.precision, model.recall], feed_dict=test_feed_dict)
+		test_avg_loss, test_rmse, test_accuracy, test_precision, test_recall, preds = sess.run([model.loss, model.rmse, model.accuracy, model.precision, model.recall, model.outputs], feed_dict=test_feed_dict)
 		print('polyak test loss = ', test_avg_loss)
 		print('polyak test rmse = ', test_rmse)
 		print('polyak test accuracy = ', test_accuracy)
+		preds = np.argmax(preds, 1)
+		auc = roc_auc_score(test_labels, preds)
 
 		sess.close()
 		tf.reset_default_graph()
-		return train_rmses, val_rmses, train_losses, val_losses, test_rmse, test_accuracy, test_precision, test_recall
+		return train_rmses, val_rmses, train_losses, val_losses, test_rmse, test_accuracy, test_precision, test_recall, auc
 	else:
 		# restore with polyak averages of parameters
 		variables_to_restore = model.variable_averages.variables_to_restore()
 		saver = tf.train.Saver(variables_to_restore)
 		saver.restore(sess, save_path)
 
-		val_avg_loss, val_rmse, val_accuracy, val_precision, val_recall = sess.run([model.loss, model.rmse, model.accuracy, model.precision, model.recall], feed_dict=val_feed_dict)
+		val_avg_loss, val_rmse, val_accuracy, val_precision, val_recall, preds = sess.run([model.loss, model.rmse, model.accuracy, model.precision, model.recall, model.outputs], feed_dict=val_feed_dict)
 		print('polyak val loss = ', val_avg_loss)
 		print('polyak val rmse = ', val_rmse)
 		print('polyak val accuracy = ', val_accuracy)
+		preds = np.argmax(preds, 1)
+		auc = roc_auc_score(test_labels, preds)
 
 		sess.close()
 		tf.reset_default_graph()
-		return train_rmses, val_rmses, train_losses, val_losses, val_rmse, val_accuracy, val_precision, val_recall
+		return train_rmses, val_rmses, train_losses, val_losses, val_rmse, val_accuracy, val_precision, val_recall, auc
