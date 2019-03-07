@@ -3,7 +3,7 @@ from itertools import product
 import pickle
 import numpy as np
 
-iterations = 1
+iterations = 2
 
 NB_EPOCH = 3000
 DO = 0.5
