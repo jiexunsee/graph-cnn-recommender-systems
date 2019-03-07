@@ -462,8 +462,14 @@ def load_facebook_data_link_prediction(adj, edges_fraction, val_fraction=0.2, te
     n_edges = len(all_edges)
 
     train_edges, dev_edges, train_labels, dev_labels = train_test_split(all_edges, all_labels, test_size=val_fraction+test_fraction, random_state=42)
-    test_val_ratio = test_fraction/(test_fraction+val_fraction)
-    val_edges, test_edges, val_labels, test_labels = train_test_split(dev_edges, dev_labels, test_size=test_val_ratio, random_state=43)
+    if val_fraction > 0:
+        test_val_ratio = test_fraction/(test_fraction+val_fraction)
+        val_edges, test_edges, val_labels, test_labels = train_test_split(dev_edges, dev_labels, test_size=test_val_ratio, random_state=43)
+    else:
+        val_edges = dev_edges
+        test_edges = dev_edges
+        val_labels = dev_labels
+        test_labels = dev_labels
 
     print('merged edges... {} train, {} val, {} test'.format(len(train_labels), len(val_labels), len(test_labels)))
 
