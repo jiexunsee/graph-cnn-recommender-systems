@@ -21,6 +21,6 @@ The Facebook dataset needs to be processed to generate an adjacency matrix and u
 ### Scripts to use
 To run a single experiment, use the script `gcmc_adaptation/train.py`. Hyperparameter and experimental settings need to be specified at the command line when running the script. For example, use the command to run an experiment on the Facebook dataset:
 
-```python train.py -d facebook --accum stackRGGCN -do 0.7 -e 1000 --hidden 50 25 --num_layers 2 --features --testing```
+```python train.py -d facebook --accum stackRGGCN --dropout 0.5 -e 1000 --hidden 50 25 --num_layers 2 --features --testing```
 
 To evaluate the results of a set of hyperparameters, averaged over a number of iterations, use the script `gcmc_adaptation/evaluate_hyperparameters.py`. The hyperparameters and number of iterations can be edited within this script.
