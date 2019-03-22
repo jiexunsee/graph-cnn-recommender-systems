@@ -92,4 +92,4 @@ def gather_edges_info():
 
 if __name__ == '__main__':
 	adj = gather_edges_info()
-	print(len(np.where(adj)[0])/2)
+	print(len(np.where(adj == 2)[0])/2)
