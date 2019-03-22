@@ -75,7 +75,7 @@ def gather_side_info():
 	np.save('user_features.npy', user_features)
 
 def gather_edges_info():
-	adj = np.zeros((4039, 4039))
+	adj = np.ones((4039, 4039))
 	file = 'facebook_combined.txt'
 	edges = open(file, 'r').read()
 	edges = edges.split('\n')
@@ -84,12 +84,12 @@ def gather_edges_info():
 			continue
 		s = int(edge.split()[0])
 		e = int(edge.split()[1])
-		adj[s, e] = 1
-		adj[e, s] = 1
+		adj[s, e] = 2
+		adj[e, s] = 2
 	np.save('adjacency1.npy', adj)
+	print('adjacency matrix saved.')
 	return adj
 
 if __name__ == '__main__':
 	adj = gather_edges_info()
-	print(adj)
 	print(len(np.where(adj)[0])/2)
