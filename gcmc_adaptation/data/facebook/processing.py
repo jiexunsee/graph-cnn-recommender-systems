@@ -86,7 +86,7 @@ def gather_edges_info():
 		e = int(edge.split()[1])
 		adj[s, e] = 2
 		adj[e, s] = 2
-	np.save('adjacency1.npy', adj)
+	np.save('adjacency2.npy', adj)
 	print('adjacency matrix saved.')
 	return adj
 
